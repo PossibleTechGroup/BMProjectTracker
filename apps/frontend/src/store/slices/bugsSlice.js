@@ -81,6 +81,9 @@ const bugsSlice = createSlice({
       })
       .addCase(deleteBug.fulfilled, (state, action) => {
         state.items = state.items.filter(b => b.id !== action.payload);
+      })
+      .addCase('platforms/deletePlatform/fulfilled', (state, action) => {
+        state.items = state.items.filter(b => b.platformId !== action.payload);
       });
   },
 });

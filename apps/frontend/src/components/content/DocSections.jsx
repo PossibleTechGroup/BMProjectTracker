@@ -6,6 +6,7 @@ import { updateProjectField, addResourceLink, updateResourceLink, deleteResource
 import { updatePlatformAsync } from '@/store/slices/platformsSlice';
 import EditableField from '@/components/common/EditableField';
 import { useEdit } from '@/components/common/EditContext';
+import { Pencil } from 'lucide-react';
 import t from '@/locales/en.json';
 
 // Ensure a user-entered URL is absolute so it isn't resolved relative to the current host.
@@ -423,7 +424,9 @@ export function GitReposSection({ onSelect }) {
                         <span style={{ color: '#9CA3AF' }}>Not configured</span>
                       )}
                       {editing && (
-                        <button style={{ background: 'none', border: 'none', color: '#1a5c32', cursor: 'pointer', fontSize: 12, padding: '2px 6px' }} onClick={() => startEditRepo(p)}>✏️</button>
+                        <button style={{ background: 'none', border: 'none', color: '#1a5c32', cursor: 'pointer', fontSize: 12, padding: '2px 6px', display: 'inline-flex', alignItems: 'center' }} onClick={() => startEditRepo(p)}>
+                          <Pencil size={12} />
+                        </button>
                       )}
                     </>
                   )}

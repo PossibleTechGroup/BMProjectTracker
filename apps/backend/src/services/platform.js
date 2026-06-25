@@ -20,7 +20,6 @@ export async function create(data) {
     const defaultSeverity = await tx.severity.findFirst({ where: { projectId: data.projectId, isDefault: true } });
 
     const featureRequests = [];
-    const workItems = [];
     const bugReports = [];
     const qaStories = [];
 
@@ -35,18 +34,6 @@ export async function create(data) {
         },
       });
       featureRequests.push({ ...fr, status: defaultStatusRequest });
-    }
-
-    if (defaultStatusWork) {
-      const wi = await tx.activeWorkItem.create({
-        data: {
-          platformId: platform.id,
-          title: `Sample: Initial work item for ${data.name}`,
-          description: `Auto-created work item for ${data.name}`,
-          statusId: defaultStatusWork.id,
-        },
-      });
-      workItems.push({ ...wi, status: defaultStatusWork });
     }
 
     if (defaultStatusBug && defaultSeverity) {
@@ -119,11 +106,11 @@ export async function create(data) {
       where: { id: platform.id },
       include: {
         features: { include: { subTasks: true } },
-        _count: { select: { bugReports: true, qaStories: true, featureRequests: true, workItems: true } },
+        _count: { select: { bugReports: true, qaStories: true, featureRequests: true } },
       },
     });
 
-    return { platform: fullPlatform, featureRequests, workItems, bugReports, qaStories };
+    return { platform: fullPlatform, featureRequests, bugReports, qaStories };
   });
 }
 

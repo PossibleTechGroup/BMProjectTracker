@@ -1,17 +1,18 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { saveEdit } from '@/store/slices/editDataSlice';
 import { updateProjectField, addSupplementaryDoc, updateSupplementaryDoc, deleteSupplementaryDoc } from '@/store/slices/projectSlice';
 import { updateFeatureRequestAsync, createFeatureRequest, deleteFeatureRequest, fetchFeatureRequests } from '@/store/slices/featuresSlice';
 import { deleteBug, createBug, updateBugAsync } from '@/store/slices/bugsSlice';
-import { deleteWorkItem, fetchWorkItemsByPlatform, createWorkItem, updateWorkItem } from '@/store/slices/workItemsSlice';
 import { deleteQAStory, fetchQAByPlatform, createQAStory, updateQAStoryAsync } from '@/store/slices/qaSlice';
 import { createPlatform, deletePlatform, createFeature, updatePlatformAsync, updateFeature, deleteFeature, createSubTask, updateSubTaskAsync, deleteSubTask } from '@/store/slices/platformsSlice';
 import { fetchUsers } from '@/store/slices/usersSlice';
+import { fetchStatuses, fetchSeverities } from '@/store/slices/statusesSlice';
 import { apiFetch } from '@/lib/api';
 import EditableField from '@/components/common/EditableField';
 import { useEdit } from '@/components/common/EditContext';
+import { Pencil } from 'lucide-react';
 
 /* ============================================================
    Shared UI Helpers
@@ -58,6 +59,9 @@ function StatusBadge({ status }) {
       s === 'review' ? 'badge--review' : 'badge--pending';
   return <span className={`doc-badge ${cls}`}>{status || 'Pending'}</span>;
 }
+
+import { ReviewStatusBadge, ReviewOverlay } from '@/components/common/EntityWidgets';
+
 
 function FeatureBar({ color }) {
   return <span className="feature-bar" style={{ background: color || '#2196F3' }} />;
@@ -268,7 +272,10 @@ export function GranularPlatformSection({ platformId, onSelect }) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
         <div>
-          <h1 className="doc-section__title" style={{ margin: 0 }}>{platform.name}</h1>
+          <h1 className="doc-section__title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+            {platform.name}
+            <ReviewStatusBadge entityKey={`platform-${platform.id}`} />
+          </h1>
           <span style={{ fontSize: 13, color: '#888' }}>{platform.type} · {platform.status}</span>
         </div>
         {editing && (
@@ -423,6 +430,10 @@ export function GranularPlatformSection({ platformId, onSelect }) {
           <p style={{ fontSize: 14, color: '#999', textAlign: 'center', padding: 20 }}>No features yet.</p>
         )}
       </div>
+
+
+
+      <ReviewOverlay entityKey={`platform-${platform.id}`} />
     </section>
   );
 }
@@ -447,10 +458,10 @@ export function GranularFeatureSection({ featureId, onSelect }) {
   const [subTitleVal, setSubTitleVal] = useState('');
   const [subAssigneeVal, setSubAssigneeVal] = useState('');
   const [subStatusVal, setSubStatusVal] = useState('');
-  const [taskStatuses, setTaskStatuses] = useState([]);
-
+  const taskStatuses = useSelector(s => s.statuses.byType.task) || [];
+  
   useEffect(() => {
-    apiFetch('/statuses/project/1?type=task').then(setTaskStatuses).catch(() => {});
+    dispatch(fetchStatuses({ projectId: 1, type: 'task' }));
     dispatch(fetchUsers());
   }, [dispatch]);
 
@@ -526,7 +537,10 @@ export function GranularFeatureSection({ featureId, onSelect }) {
             onChange={e => setDraftTitle(e.target.value)}
           />
         ) : (
-          <h1 className="doc-section__title" style={{ margin: 0 }}>FEATURE: {feature.title || feature.name}</h1>
+          <h1 className="doc-section__title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+            FEATURE: {feature.title || feature.name}
+            <ReviewStatusBadge entityKey={`feature-${feature.id}`} />
+          </h1>
         )}
         {editing && (
           <button
@@ -580,7 +594,10 @@ export function GranularFeatureSection({ featureId, onSelect }) {
         ) : (
           <p style={{ fontSize: 14, color: '#999', fontStyle: 'italic', marginBottom: 24 }}>No description yet. Click "Edit" to add details.</p>
         )}
+
       </div>
+
+      <ReviewOverlay entityKey={`feature-${feature.id}`} />
 
       {editing && (
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
@@ -659,7 +676,9 @@ export function GranularFeatureSection({ featureId, onSelect }) {
                   {editing && (
                     <td>
                       <div style={{ display: 'flex', gap: 4 }}>
-                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#1a5c32' }} onClick={() => startEditSub(sub)}>✏️</button>
+                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#1a5c32', display: 'flex', alignItems: 'center' }} onClick={() => startEditSub(sub)}>
+                          <Pencil size={13} />
+                        </button>
                         <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#e53935' }} onClick={() => handleDeleteSub(sub.id)}>🗑️</button>
                       </div>
                     </td>
@@ -725,9 +744,10 @@ export function FeatureRequestsLanding({ onSelect }) {
 export function FeatureRequestSection({ platformId, onSelect }) {
   const dispatch = useDispatch();
   const platform = useSelector(s => s.platforms.items.find(p => p.id === platformId));
-  const requests = useSelector(s => s.features.items.filter(f => f.platformId === platformId));
+  const allRequests = useSelector(s => s.features.items);
+  const requests = useMemo(() => allRequests.filter(f => f.platformId === platformId), [allRequests, platformId]);
   const { editing } = useEdit();
-  const [requestStatuses, setRequestStatuses] = useState([]);
+  const requestStatuses = useSelector(s => s.statuses.byType.request) || [];
   const [statusDrafts, setStatusDrafts] = useState({});
   const [showNewRequest, setShowNewRequest] = useState(false);
   const [newReqTitle, setNewReqTitle] = useState('');
@@ -736,7 +756,7 @@ export function FeatureRequestSection({ platformId, onSelect }) {
   const [reqError, setReqError] = useState('');
 
   useEffect(() => {
-    apiFetch('/statuses/project/1?type=request').then(setRequestStatuses).catch(() => {});
+    dispatch(fetchStatuses({ projectId: 1, type: 'request' }));
     dispatch(fetchFeatureRequests(platformId));
   }, [dispatch, platformId]);
 
@@ -853,25 +873,46 @@ export function FeatureRequestSection({ platformId, onSelect }) {
         <table>
           <thead><tr><th>Title</th><th>Status</th><th>Actions</th><th style={{ width: 60 }}></th></tr></thead>
           <tbody>
-            {requests.map(req => (
+            {requests.map(req => {
+              const hasDraft = statusDrafts[req.id] !== undefined && statusDrafts[req.id] !== (req.status?.id || '');
+              return (
               <tr key={req.id} className="clickable-row" onClick={() => onSelect(`freq-${req.id}`)}>
                 <td>{req.title}</td>
                 <td onClick={e => e.stopPropagation()}>
-                  {requestStatuses.length > 0 ? (
-                    <select
-                      className="status-select"
-                      value={req.status?.id || ''}
-                      onChange={e => {
-                        dispatch(updateFeatureRequestAsync({ id: req.id, statusId: Number(e.target.value) }));
-                      }}
-                    >
-                      {requestStatuses.map(s => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <StatusBadge status={req.status?.name || req.status} />
-                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {requestStatuses.length > 0 ? (
+                      <select
+                        className="status-select"
+                        value={statusDrafts[req.id] !== undefined ? statusDrafts[req.id] : (req.status?.id || '')}
+                        onChange={e => {
+                          setStatusDrafts(d => ({ ...d, [req.id]: Number(e.target.value) }));
+                        }}
+                      >
+                        {requestStatuses.map(s => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <StatusBadge status={req.status?.name || req.status} />
+                    )}
+                    {hasDraft && (
+                      <button
+                        onClick={() => {
+                          dispatch(updateFeatureRequestAsync({ id: req.id, statusId: statusDrafts[req.id] }));
+                          setStatusDrafts(d => { const n = { ...d }; delete n[req.id]; return n; });
+                        }}
+                        style={{
+                          width: 26, height: 26, borderRadius: '50%', border: 'none',
+                          background: '#1a5c32', color: '#fff', cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 14, fontWeight: 700, flexShrink: 0,
+                          boxShadow: '0 2px 6px rgba(26,92,50,0.3)',
+                          transition: 'all 0.15s ease',
+                        }}
+                        title="Save status change"
+                      >✓</button>
+                    )}
+                  </div>
                 </td>
                 <td>
                   {(req.status?.slug === 'review' || req.status === 'review') && (
@@ -889,7 +930,8 @@ export function FeatureRequestSection({ platformId, onSelect }) {
                   >🗑️</button>
                 </td>
               </tr>
-            ))}
+              );
+            })}
             {requests.length === 0 && <tr><td colSpan={4} style={{ textAlign: 'center', color: '#999', padding: 20 }}>No feature requests yet.</td></tr>}
           </tbody>
         </table>
@@ -901,12 +943,12 @@ export function FeatureRequestSection({ platformId, onSelect }) {
 export function FeatureRequestDetailView({ requestId, onSelect }) {
   const dispatch = useDispatch();
   const req = useSelector(s => s.features.items.find(f => f.id === requestId));
-  const [requestStatuses, setRequestStatuses] = useState([]);
+  const requestStatuses = useSelector(s => s.statuses.byType.request) || [];
   const [statusDraft, setStatusDraft] = useState(null);
 
   useEffect(() => {
-    apiFetch('/statuses/project/1?type=request').then(setRequestStatuses).catch(() => {});
-  }, []);
+    dispatch(fetchStatuses({ projectId: 1, type: 'request' }));
+  }, [dispatch]);
 
   if (!req) return <p>Not found</p>;
 
@@ -923,7 +965,10 @@ export function FeatureRequestDetailView({ requestId, onSelect }) {
   return (
     <section className="doc-section doc-section--animate">
       <Breadcrumb items={[{ label: 'Feature Requests', id: 'feature-requests' }, req.title]} onSelect={onSelect} />
-      <h1 className="doc-section__title">{req.title}</h1>
+      <h1 className="doc-section__title" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {req.title}
+        <ReviewStatusBadge entityKey={`feature-request-${req.id}`} />
+      </h1>
       <p>{req.description}</p>
       {req.imageUrl && (
         <img src={req.imageUrl} alt={req.title} style={{ maxWidth: '100%', maxHeight: 400, borderRadius: 8, border: '1px solid #e8e8e8', marginTop: 8 }} />
@@ -983,17 +1028,18 @@ export function FeatureRequestDetailView({ requestId, onSelect }) {
           Delete
         </button>
       </div>
+
+      <ReviewOverlay entityKey={`feature-request-${req.id}`} />
     </section>
   );
 }
 
 export function ActiveWorkBugsLanding({ onSelect }) {
   const bugs = useSelector(s => s.bugs.items) || [];
-  const platforms = useSelector(s => s.platforms.items) || [];
   return (
     <section className="doc-section doc-section--animate">
-      <Breadcrumb items={[{ label: 'Active Work & Bug Reporting', id: 'active-work-bugs' }]} onSelect={onSelect} />
-      <h1 className="doc-section__title">Active Work & Bug Reporting</h1>
+      <Breadcrumb items={[{ label: 'Bug Reporting', id: 'active-work-bugs' }]} onSelect={onSelect} />
+      <h1 className="doc-section__title">Bug Reporting</h1>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <button
           onClick={() => onSelect('active-bugs')}
@@ -1005,18 +1051,6 @@ export function ActiveWorkBugsLanding({ onSelect }) {
             <div style={{ fontWeight: 700, fontSize: 16, color: '#1a1a1a', marginBottom: 8 }}>🐛 Active Bugs</div>
             <div style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>View and manage reported bugs across all platforms.</div>
             <span style={{ background: '#fff0f0', color: '#e53935', fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20 }}>{bugs.length} bug{bugs.length !== 1 ? 's' : ''}</span>
-          </div>
-        </button>
-        <button
-          onClick={() => onSelect('active-work')}
-          style={{ textAlign: 'left', cursor: 'pointer', padding: 0, border: '1px solid #e8e8e8', borderRadius: 12, background: '#fff', overflow: 'hidden', transition: 'all 0.2s ease', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
-          onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = '#1a5c32'; }}
-          onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = '#e8e8e8'; }}
-        >
-          <div style={{ padding: '16px 18px' }}>
-            <div style={{ fontWeight: 700, fontSize: 16, color: '#1a1a1a', marginBottom: 8 }}>📋 Active Work Items</div>
-            <div style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>Track work in progress across platforms.</div>
-            <span style={{ background: '#f0faf3', color: '#1a5c32', fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20 }}>{platforms.length} platform{platforms.length !== 1 ? 's' : ''}</span>
           </div>
         </button>
       </div>
@@ -1031,9 +1065,9 @@ export function ActiveBugsSection({ onSelect }) {
   const { editing } = useEdit();
 
   const [showNew, setShowNew] = useState(false);
-  const [statuses, setStatuses] = useState([]);
+  const statuses = useSelector(s => s.statuses.byType.bug) || [];
   const [statusDrafts, setStatusDrafts] = useState({});
-  const [severities, setSeverities] = useState([]);
+  const severities = useSelector(s => s.statuses.severities) || [];
   const [error, setError] = useState('');
   const [image, setImage] = useState('');
   const [form, setForm] = useState({ platformId: '', title: '', severityId: '', statusId: '', description: '' });
@@ -1045,9 +1079,9 @@ export function ActiveBugsSection({ onSelect }) {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    apiFetch('/statuses/project/1?type=bug').then(setStatuses).catch(() => {});
-    apiFetch('/severities/project/1').then(setSeverities).catch(() => {});
-  }, []);
+    dispatch(fetchStatuses({ projectId: 1, type: 'bug' }));
+    dispatch(fetchSeverities(1));
+  }, [dispatch]);
 
   const setField = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -1119,7 +1153,7 @@ export function ActiveBugsSection({ onSelect }) {
 
   return (
     <section className="doc-section doc-section--animate">
-      <Breadcrumb items={[{ label: 'Active Work & Bug Reporting', id: 'active-work-bugs' }, 'Active Bugs']} onSelect={onSelect} />
+      <Breadcrumb items={[{ label: 'Bug Reporting', id: 'active-work-bugs' }, 'Active Bugs']} onSelect={onSelect} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <h1 className="doc-section__title" style={{ margin: 0 }}>Active Bugs</h1>
         {!showNew && (
@@ -1283,19 +1317,22 @@ export function ActiveBugsSection({ onSelect }) {
 export function BugReportDetailView({ bugId, onSelect }) {
   const dispatch = useDispatch();
   const bug = useSelector(s => s.bugs.items.find(b => b.id === bugId));
-  const [statuses, setStatuses] = useState([]);
+  const statuses = useSelector(s => s.statuses.byType.bug) || [];
   const [statusDraft, setStatusDraft] = useState(null);
 
   useEffect(() => {
-    apiFetch('/statuses/project/1?type=bug').then(setStatuses).catch(() => {});
-  }, []);
+    dispatch(fetchStatuses({ projectId: 1, type: 'bug' }));
+  }, [dispatch]);
 
   if (!bug) return <p>Not found</p>;
   const attachments = bug.attachments || [];
   return (
     <section className="doc-section doc-section--animate">
-      <Breadcrumb items={[{ label: 'Active Work & Bug Reporting', id: 'active-work-bugs' }, 'Bugs', bug.title]} onSelect={onSelect} />
-      <h1 className="doc-section__title">{bug.title}</h1>
+      <Breadcrumb items={[{ label: 'Bug Reporting', id: 'active-work-bugs' }, 'Bugs', bug.title]} onSelect={onSelect} />
+      <h1 className="doc-section__title" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {bug.title}
+        <ReviewStatusBadge entityKey={`bug-${bug.id}`} />
+      </h1>
       <p>{bug.description}</p>
       {statuses.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, marginBottom: 8 }}>
@@ -1328,221 +1365,8 @@ export function BugReportDetailView({ bugId, onSelect }) {
           ))}
         </div>
       )}
-    </section>
-  );
-}
 
-export function ActiveWorkSection({ onSelect }) {
-  const platforms = useSelector(s => s.platforms.items) || [];
-  const workItems = useSelector(s => s.workItems.items) || [];
-  return (
-    <section className="doc-section doc-section--animate">
-      <Breadcrumb items={[{ label: 'Active Work & Bug Reporting', id: 'active-work-bugs' }, 'Active Work Items']} onSelect={onSelect} />
-      <h1 className="doc-section__title">Active Work Items</h1>
-      <div style={{ marginBottom: 16, fontSize: 14, color: '#666' }}>
-        {platforms.length} platform{platforms.length !== 1 ? 's' : ''}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {platforms.map(p => (
-          <button
-            key={p.id}
-            onClick={() => onSelect(`aw-platform-${p.id}`)}
-            style={{ textAlign: 'left', cursor: 'pointer', width: '100%', padding: 0, border: '1px solid #e8e8e8', borderRadius: 12, background: '#fff', overflow: 'hidden', transition: 'all 0.2s ease', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
-            onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = '#1a5c32'; }}
-            onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = '#e8e8e8'; }}
-          >
-            <div style={{ padding: '16px 18px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                <div style={{ fontWeight: 700, fontSize: 16, color: '#1a1a1a' }}>{p.name}</div>
-                <span style={{ background: '#f0faf3', color: '#1a5c32', fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20, whiteSpace: 'nowrap' }}>
-                  {(p.workItems || []).length} item{(p.workItems || []).length !== 1 ? 's' : ''}
-                </span>
-              </div>
-              <div style={{ display: 'flex', gap: 12, fontSize: 12, color: '#999' }}>
-                <span>🔧 {p.type || 'web'}</span>
-                <span>📌 {p.status || 'active'}</span>
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-      {platforms.length === 0 && <p style={{ textAlign: 'center', color: '#999', padding: 40 }}>No platforms yet.</p>}
-    </section>
-  );
-}
-
-export function ActiveWorkPlatformSection({ platformId, onSelect }) {
-  const dispatch = useDispatch();
-  const workItems = useSelector(s => s.workItems.items);
-  const platform = useSelector(s => s.platforms.items.find(p => p.id === platformId));
-  const users = useSelector(s => s.users.items) || [];
-  const { editing } = useEdit();
-
-  const [showNew, setShowNew] = useState(false);
-  const [statuses, setStatuses] = useState([]);
-  const [error, setError] = useState('');
-  const [form, setForm] = useState({ title: '', assigneeId: '', statusId: '' });
-
-  const [editingItem, setEditingItem] = useState(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editAssignee, setEditAssignee] = useState('');
-  const [editStatus, setEditStatus] = useState('');
-
-  useEffect(() => {
-    dispatch(fetchWorkItemsByPlatform(platformId));
-    dispatch(fetchUsers());
-    apiFetch('/statuses/project/1?type=work').then(setStatuses).catch(() => {});
-  }, [dispatch, platformId]);
-
-  if (!platform) return null;
-
-  const setField = (k, v) => setForm(f => ({ ...f, [k]: v }));
-
-  const startEdit = (wi) => {
-    setEditingItem(wi.id);
-    setEditTitle(wi.title || '');
-    setEditAssignee(wi.assigneeId ? String(wi.assigneeId) : '');
-    setEditStatus(wi.statusId ? String(wi.statusId) : '');
-  };
-
-  const saveEdit = async () => {
-    if (!editingItem) return;
-    const updates = {};
-    if (editTitle.trim()) updates.title = editTitle;
-    updates.assigneeId = editAssignee ? Number(editAssignee) : null;
-    if (editStatus) updates.statusId = Number(editStatus);
-    await dispatch(updateWorkItem({ id: editingItem, ...updates }));
-    setEditingItem(null);
-  };
-
-  const handleCreate = async () => {
-    setError('');
-    if (!form.title.trim()) { setError('Title is required.'); return; }
-    const defaultStatus = statuses.find(s => s.isDefault) || statuses[0];
-    try {
-      await dispatch(createWorkItem({
-        platformId,
-        title: form.title,
-        assigneeId: form.assigneeId ? Number(form.assigneeId) : null,
-        statusId: form.statusId ? Number(form.statusId) : defaultStatus?.id,
-      })).unwrap();
-      setForm({ title: '', assigneeId: '', statusId: '' });
-      setShowNew(false);
-    } catch (e) {
-      setError(e.message || 'Failed to create work item.');
-    }
-  };
-
-  const inputStyle = { padding: '8px 12px', border: '1px solid #c8e6c9', borderRadius: 6, fontSize: 13, outline: 'none' };
-
-  return (
-    <section className="doc-section doc-section--animate">
-      <Breadcrumb items={[{ label: 'Active Work & Bug Reporting', id: 'active-work-bugs' }, 'Active Work Items', platform.name]} onSelect={onSelect} />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h1 className="doc-section__title" style={{ margin: 0 }}>{platform.name} - Active Work</h1>
-        {editing && !showNew && (
-          <button
-            style={{ padding: '6px 16px', background: '#1a5c32', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
-            onClick={() => setShowNew(true)}
-          >
-            + New Work Item
-          </button>
-        )}
-      </div>
-
-      {editing && showNew && (
-        <div style={{ background: '#f0faf3', border: '1px solid #c8e6c9', borderRadius: 10, padding: 16, marginBottom: 16 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#1a5c32', marginBottom: 10 }}>New Work Item</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <input style={inputStyle} value={form.title} onChange={e => setField('title', e.target.value)} placeholder="Work item title..." autoFocus />
-            <div style={{ display: 'flex', gap: 8 }}>
-              <select style={{ ...inputStyle, flex: 1 }} value={form.assigneeId} onChange={e => setField('assigneeId', e.target.value)}>
-                <option value="">Unassigned</option>
-                {users.map(u => <option key={u.id} value={u.id}>{u.name || u.username}</option>)}
-              </select>
-              <select style={{ ...inputStyle, flex: 1 }} value={form.statusId} onChange={e => setField('statusId', e.target.value)}>
-                <option value="">Status (default)</option>
-                {statuses.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </div>
-            {error && <div style={{ color: '#c62828', fontSize: 13 }}>{error}</div>}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button style={{ padding: '8px 18px', background: '#1a5c32', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600 }} onClick={handleCreate}>Save</button>
-              <button style={{ padding: '8px 18px', background: '#fff', color: '#666', border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', fontSize: 13 }} onClick={() => { setShowNew(false); setError(''); }}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="feature-block__table">
-        <table>
-          <thead><tr><th>Title</th><th>Assignee</th><th>Status</th>{editing && <th style={{ width: 60 }}></th>}</tr></thead>
-          <tbody>
-            {workItems.map(wi => (
-              editing && editingItem === wi.id ? (
-                <tr key={wi.id}>
-                  <td>
-                    <input
-                      style={{ width: '100%', padding: '6px 8px', border: '1px solid #c8e6c9', borderRadius: 4, fontSize: 13, outline: 'none' }}
-                      value={editTitle}
-                      onChange={e => setEditTitle(e.target.value)}
-                      autoFocus
-                    />
-                  </td>
-                  <td>
-                    <select
-                      style={{ padding: '6px 8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 13 }}
-                      value={editAssignee}
-                      onChange={e => setEditAssignee(e.target.value)}
-                    >
-                      <option value="">Unassigned</option>
-                      {users.map(u => <option key={u.id} value={u.id}>{u.name || u.username}</option>)}
-                    </select>
-                  </td>
-                  <td>
-                    <select
-                      style={{ padding: '6px 8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 13 }}
-                      value={editStatus}
-                      onChange={e => setEditStatus(e.target.value)}
-                    >
-                      {statuses.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <button style={{ padding: '4px 10px', background: '#1a5c32', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12 }} onClick={saveEdit}>Save</button>
-                      <button style={{ padding: '4px 10px', background: '#fff', color: '#666', border: '1px solid #ddd', borderRadius: 4, cursor: 'pointer', fontSize: 12 }} onClick={() => setEditingItem(null)}>X</button>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                <tr key={wi.id} className="clickable-row">
-                  <td>{wi.title}</td>
-                  <td>{wi.assignee ? (wi.assignee.name || wi.assignee.username) : 'Unassigned'}</td>
-                  <td><StatusBadge status={wi.status?.name || wi.status} /></td>
-                  {editing && (
-                    <td>
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        <button
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#1a5c32' }}
-                          title="Edit work item"
-                          onClick={e => { e.stopPropagation(); startEdit(wi); }}
-                        >✏️</button>
-                        <button
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, color: '#e53935' }}
-                          title="Delete work item"
-                          onClick={e => { e.stopPropagation(); if (confirm('Delete this work item?')) dispatch(deleteWorkItem(wi.id)); }}
-                        >🗑️</button>
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              )
-            ))}
-            {workItems.length === 0 && <tr><td colSpan={editing ? 4 : 3}>No active work items found.</td></tr>}
-          </tbody>
-        </table>
-      </div>
+      <ReviewOverlay entityKey={`bug-${bug.id}`} />
     </section>
   );
 }
@@ -1587,7 +1411,7 @@ export function QAPlatformSection({ platformId, onSelect }) {
   const users = useSelector(s => s.users.items) || [];
   const { editing } = useEdit();
 
-  const [statuses, setStatuses] = useState([]);
+  const statuses = useSelector(s => s.statuses.byType.qa) || [];
   const [showNew, setShowNew] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ storyCode: '', title: '', description: '', statusId: '' });
@@ -1599,7 +1423,7 @@ export function QAPlatformSection({ platformId, onSelect }) {
 
   useEffect(() => {
     dispatch(fetchQAByPlatform(platformId));
-    apiFetch('/statuses/project/1?type=qa').then(setStatuses).catch(() => {});
+    dispatch(fetchStatuses({ projectId: 1, type: 'qa' }));
     dispatch(fetchUsers());
   }, [dispatch, platformId]);
 
@@ -1792,12 +1616,12 @@ export function QAStoryDetailView({ storyId, onSelect }) {
   const dispatch = useDispatch();
   const story = useSelector(s => s.qa.items.find(st => st.id === storyId));
   const users = useSelector(s => s.users.items) || [];
-  const [statuses, setStatuses] = useState([]);
+  const statuses = useSelector(s => s.statuses.byType.qa) || [];
   const [statusDraft, setStatusDraft] = useState(null);
 
   useEffect(() => {
     dispatch(fetchUsers());
-    apiFetch('/statuses/project/1?type=qa').then(setStatuses).catch(() => {});
+    dispatch(fetchStatuses({ projectId: 1, type: 'qa' }));
   }, [dispatch]);
 
   if (!story) return <p>Loading...</p>;
@@ -1810,7 +1634,10 @@ export function QAStoryDetailView({ storyId, onSelect }) {
   return (
     <section className="doc-section doc-section--animate">
       <Breadcrumb items={[{ label: 'Quality Assurance', id: 'qa' }, 'Stories', story.storyCode]} onSelect={onSelect} />
-      <h1 className="doc-section__title">{story.storyCode}: {story.title}</h1>
+      <h1 className="doc-section__title" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {story.storyCode}: {story.title}
+        <ReviewStatusBadge entityKey={`qa-story-${story.id}`} />
+      </h1>
 
       <div className="doc-callout" style={{ padding: 16 }}>
         <div className="doc-callout__header" style={{ marginBottom: 12 }}>QA Details</div>
@@ -1862,6 +1689,8 @@ export function QAStoryDetailView({ storyId, onSelect }) {
           <li key={step.id}>{step.instruction}</li>
         ))}
       </ol>
+
+      <ReviewOverlay entityKey={`qa-story-${story.id}`} />
     </section>
   );
 }
@@ -2101,22 +1930,11 @@ export function AllOtherDocsSection({ onSelect }) {
                               ) : (
                                 <>
                                   <button 
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center' }}
                                     title="Edit"
                                     onClick={() => handleStartEdit(doc)}
                                   >
-                                    ✏️
-                                  </button>
-                                  <button 
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}
-                                    title="Delete"
-                                    onClick={() => {
-                                      if (confirm('Delete this document?')) {
-                                        dispatch(deleteSupplementaryDoc(doc.id));
-                                      }
-                                    }}
-                                  >
-                                    🗑️
+                                    <Pencil size={13} />
                                   </button>
                                 </>
                               )}

@@ -12,12 +12,14 @@ export async function getById(req, res) {
 }
 
 export async function create(req, res) {
-  const platform = await platformService.create(req.body);
+  const userName = req.user.name || req.user.username || 'Unknown';
+  const platform = await platformService.create({ ...req.body, createdBy: userName, updatedBy: userName });
   res.status(201).json(platform);
 }
 
 export async function update(req, res) {
-  const platform = await platformService.update(Number(req.params.id), req.body);
+  const userName = req.user.name || req.user.username || 'Unknown';
+  const platform = await platformService.update(Number(req.params.id), { ...req.body, updatedBy: userName });
   res.json(platform);
 }
 

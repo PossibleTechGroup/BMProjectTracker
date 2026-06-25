@@ -10,10 +10,10 @@ import featureRoutes from './routes/features.js';
 import featureRequestRoutes from './routes/featureRequests.js';
 import bugRoutes from './routes/bugs.js';
 import qaRoutes from './routes/qa.js';
-import workItemRoutes from './routes/workItems.js';
 import docRoutes from './routes/docs.js';
 import commentRoutes from './routes/comments.js';
 import subtaskRoutes from './routes/subtasks.js';
+import reviewRoutes from './routes/reviews.js';
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -38,10 +38,10 @@ app.use('/api/features', featureRoutes);
 app.use('/api/feature-requests', featureRequestRoutes);
 app.use('/api/bugs', bugRoutes);
 app.use('/api/qa', qaRoutes);
-app.use('/api/work-items', workItemRoutes);
 app.use('/api/docs', docRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/subtasks', subtaskRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Error handler
 app.use((err, req, res, next) => {
@@ -56,8 +56,12 @@ app.use((err, req, res, next) => {
     if (err.code === 'P2002') {
       return res.status(409).json({ error: 'A record with these unique values already exists.' });
     }
-    if (err.code === 'P2003' || err.code === 'P2025') {
-      return res.status(400).json({ error: 'A referenced record was not found.' });
+    if (err.code === 'P2003') {
+      return res.status(400).json({ error: 'Cannot delete or update because a related record still references it.' });
+    }
+    if (err.code === 'P2025') {
+      if (req.method === 'DELETE') return res.status(204).end();
+      return res.status(404).json({ error: 'Record not found.' });
     }
     return res.status(400).json({ error: err.message || 'Database request error' });
   }

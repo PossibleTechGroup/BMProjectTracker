@@ -27,8 +27,6 @@ import {
   ActiveWorkBugsLanding,
   ActiveBugsSection,
   BugReportDetailView,
-  ActiveWorkSection,
-  ActiveWorkPlatformSection,
   AllOtherDocsSection,
   QALanding,
   QAPlatformSection,
@@ -83,13 +81,11 @@ export default function HomePage() {
       case 'feature-requests':
         return <FeatureRequestsLanding key="feature-requests" onSelect={setActiveSection} />;
 
-      // Section 4: Active Work & Bug Reporting
+      // Section 4: Bug Reporting
       case 'active-work-bugs':
         return <ActiveWorkBugsLanding key="active-work-bugs" onSelect={setActiveSection} />;
       case 'active-bugs':
         return <ActiveBugsSection key="active-bugs" onSelect={setActiveSection} />;
-      case 'active-work':
-        return <ActiveWorkSection key="active-work" onSelect={setActiveSection} />;
 
       // Section 5: QA
       case 'qa':
@@ -111,9 +107,6 @@ export default function HomePage() {
         }
         if (activeSection.startsWith('feature-')) {
           return <GranularFeatureSection key={activeSection} featureId={Number(activeSection.replace('feature-', ''))} onSelect={setActiveSection} />;
-        }
-        if (activeSection.startsWith('aw-platform-')) {
-          return <ActiveWorkPlatformSection key={activeSection} platformId={Number(activeSection.replace('aw-platform-', ''))} onSelect={setActiveSection} />;
         }
         if (activeSection.startsWith('fr-platform-')) {
           return <FeatureRequestSection key={activeSection} platformId={Number(activeSection.replace('fr-platform-', ''))} onSelect={setActiveSection} />;
@@ -145,18 +138,16 @@ export default function HomePage() {
       />
       <main className="doc-main">
         <div className="doc-content-area">
-          {isAdmin && (
-            <div className="doc-toolbar">
-              <button
-                className={`doc-toolbar__btn ${editing ? 'doc-toolbar__btn--active' : ''}`}
-                onClick={() => setEditing(!editing)}
-                title={editing ? 'Exit edit mode' : 'Edit this page'}
-              >
-                {editing ? <X size={16} /> : <Pencil size={16} />}
-                <span>{editing ? 'Done' : 'Edit'}</span>
-              </button>
-            </div>
-          )}
+          <div className="doc-toolbar">
+            <button
+              className={`doc-toolbar__btn ${editing ? 'doc-toolbar__btn--active' : ''}`}
+              onClick={() => setEditing(!editing)}
+              title={editing ? 'Exit edit mode' : 'Edit this page'}
+            >
+              {editing ? <X size={16} /> : <Pencil size={16} />}
+              <span>{editing ? 'Done' : 'Edit'}</span>
+            </button>
+          </div>
           <div className={editing ? 'doc-content--editing' : ''}>
             <EditProvider editing={editing}>
               {renderContent()}

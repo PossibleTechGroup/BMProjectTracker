@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { apiFetch } from '@/lib/api';
 import { addBug } from '@/store/slices/bugsSlice';
 import { addFeatureRequest } from '@/store/slices/featuresSlice';
-import { addWorkItem } from '@/store/slices/workItemsSlice';
 import { addQAStory } from '@/store/slices/qaSlice';
 
 // ─── Async Thunks ────────────────────────────────────────────
@@ -22,7 +21,6 @@ export const createPlatform = createAsyncThunk(
       body: JSON.stringify(platformData),
     });
     res.featureRequests?.forEach(fr => dispatch(addFeatureRequest(fr)));
-    res.workItems?.forEach(wi => dispatch(addWorkItem(wi)));
     res.bugReports?.forEach(b => dispatch(addBug(b)));
     res.qaStories?.forEach(q => dispatch(addQAStory(q)));
     return res.platform;

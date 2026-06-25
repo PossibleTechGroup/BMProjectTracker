@@ -8,8 +8,8 @@ export function getByProject(projectId) {
   return bugModel.findByProject(projectId);
 }
 
-export function create(data, userId) {
-  return bugModel.create({ ...data, reportedById: userId });
+export function create(data, userId, userName) {
+  return bugModel.create({ ...data, reportedById: userId, createdBy: userName, updatedBy: userName });
 }
 
 export function update(id, data) {

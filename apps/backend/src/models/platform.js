@@ -6,7 +6,7 @@ export function findByProject(projectId) {
     orderBy: { order: 'asc' },
     include: {
       features: { orderBy: { order: 'asc' }, include: { subTasks: true } },
-      _count: { select: { bugReports: true, qaStories: true, featureRequests: true, workItems: true } },
+      _count: { select: { bugReports: true, qaStories: true, featureRequests: true } },
     },
   });
 }
@@ -19,7 +19,6 @@ export function findById(id) {
       bugReports: { include: { severity: true, status: true } },
       qaStories: { include: { status: true, steps: true } },
       featureRequests: { include: { status: true, criteria: true } },
-      workItems: { include: { status: true, assignee: true } },
     },
   });
 }

@@ -95,11 +95,10 @@ const sidebarData = [
   },
   {
     id: 'active-work-bugs',
-    label: 'Active Work & Bug Reporting',
+    label: 'Bug Reporting',
     defaultOpen: false,
     children: [
       { id: 'active-bugs', label: 'Active Bugs' },
-      { id: 'active-work', label: 'Active Work' },
     ],
   },
   {
@@ -243,51 +242,30 @@ export default function DocSidebar({ activeSection, onSelect, isWide, onToggleWi
     children: [],
   }));
 
-  const editableSidebarData = isAdmin
-    ? [
-        sidebarData[0], // overview
-        {
-          ...sidebarData[1], // Documentation
-          children: [
-            ...dynamicDocs,
-          ...customDocItems,
-        ],
-      },
-      {
-        ...sidebarData[2], // Feature Requests
-        children: platforms.filter(Boolean).map(p => ({ id: `fr-platform-${p.id}`, label: p.name }))
-        },
-        sidebarData[3], // Active work
-        {
-          ...sidebarData[4], // QA
-          children: [
-            { id: 'qa-landing', label: 'QA Overview' },
-            ...dynamicQA
-          ],
-        },
-        sidebarData[5], // Other docs
-        { id: 'user-management', label: 'User Management', defaultOpen: false },
-      ]
-    : [
-        sidebarData[0],
-        {
-          ...sidebarData[1],
-          children: dynamicDocs,
-        },
-        {
-          ...sidebarData[2],
-          children: platforms.filter(Boolean).map(p => ({ id: `fr-platform-${p.id}`, label: p.name }))
-        },
-        sidebarData[3],
-        {
-          ...sidebarData[4],
-          children: [
-            { id: 'qa-landing', label: 'QA Overview' },
-            ...dynamicQA
-          ],
-        },
-        sidebarData[5],
-      ];
+  const editableSidebarData = [
+    sidebarData[0], // overview
+    {
+      ...sidebarData[1], // Documentation
+      children: [
+        ...dynamicDocs,
+        ...customDocItems,
+      ],
+    },
+    {
+      ...sidebarData[2], // Feature Requests
+      children: platforms.filter(Boolean).map(p => ({ id: `fr-platform-${p.id}`, label: p.name }))
+    },
+    sidebarData[3], // Active work
+    {
+      ...sidebarData[4], // QA
+      children: [
+        { id: 'qa-landing', label: 'QA Overview' },
+        ...dynamicQA
+      ],
+    },
+    sidebarData[5], // Other docs
+    ...(isAdmin ? [{ id: 'user-management', label: 'User Management', defaultOpen: false }] : []),
+  ];
 
   const handleLogout = () => {
     dispatch(logout());

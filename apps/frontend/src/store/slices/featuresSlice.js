@@ -81,6 +81,9 @@ const featuresSlice = createSlice({
       })
       .addCase(deleteFeatureRequest.fulfilled, (state, action) => {
         state.items = state.items.filter(f => f.id !== action.payload);
+      })
+      .addCase('platforms/deletePlatform/fulfilled', (state, action) => {
+        state.items = state.items.filter(f => f.platformId !== action.payload);
       });
   },
 });

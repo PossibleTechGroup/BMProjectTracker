@@ -6,12 +6,14 @@ export async function getByPlatform(req, res) {
 }
 
 export async function create(req, res) {
-  const story = await qaService.create(req.body);
+  const userName = req.user.name || req.user.username || 'Unknown';
+  const story = await qaService.create({ ...req.body, createdBy: userName, updatedBy: userName });
   res.status(201).json(story);
 }
 
 export async function update(req, res) {
-  const story = await qaService.update(Number(req.params.id), req.body);
+  const userName = req.user.name || req.user.username || 'Unknown';
+  const story = await qaService.update(Number(req.params.id), { ...req.body, updatedBy: userName });
   res.json(story);
 }
 

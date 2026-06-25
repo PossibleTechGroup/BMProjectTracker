@@ -28,8 +28,8 @@ model User {
   subTasksDone       SubTask[]       @relation("SubTaskDoneBy")
   featureRequests    FeatureRequest[] @relation("FeatureRequestRequestedBy")
   qaStories          QAUserStory[]   @relation("QAStoryTester")
-  workItems          ActiveWorkItem[] @relation("WorkItemAssignee")
   bugsReported       BugReport[]     @relation("BugReportedBy")
+  entityReviews      EntityReview[]
 }
 
 model RefreshToken {
@@ -104,7 +104,6 @@ model Status {
   subTasks        SubTask[]
   featureRequests FeatureRequest[]
   qaStories       QAUserStory[]
-  workItems       ActiveWorkItem[]
   bugReports      BugReport[]
 
   @@unique([projectId, type, slug])
@@ -146,12 +145,13 @@ model Platform {
   order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  createdBy   String   @default("")
+  updatedBy   String   @default("")
 
   project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
   features        Feature[]
   featureRequests FeatureRequest[]
   qaStories       QAUserStory[]
-  workItems       ActiveWorkItem[]
   bugReports      BugReport[]
   docPages        DocPage[]
 
@@ -169,6 +169,8 @@ model Feature {
   docPageId   Int?     @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  createdBy   String   @default("")
+  updatedBy   String   @default("")
 
   platform Platform  @relation(fields: [platformId], references: [id], onDelete: Cascade)
   docPage  DocPage?  @relation(fields: [docPageId], references: [id])
@@ -216,6 +218,9 @@ model FeatureRequest {
   imageUrl      String   @default("")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  createdBy     String   @default("")
+  updatedBy     String   @default("")
+  isUpdated     Boolean  @default(false)
 
   platform    Platform                 @relation(fields: [platformId], references: [id], onDelete: Cascade)
   requestedBy User?                    @relation("FeatureRequestRequestedBy", fields: [requestedById], references: [id])
@@ -280,6 +285,8 @@ model QAUserStory {
   order          Int      @default(0)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  createdBy      String   @default("")
+  updatedBy      String   @default("")
 
   platform Platform     @relation(fields: [platformId], references: [id], onDelete: Cascade)
   tester   User?        @relation("QAStoryTester", fields: [testerId], references: [id])
@@ -299,26 +306,7 @@ model QATestStep {
 
   @@index([qaUserStoryId])
 }
-
-// ─────────────────────────── Active Work & Bugs ─────────────────────────
-
-model ActiveWorkItem {
-  id          Int      @id @default(autoincrement())
-  platformId  Int
-  title       String
-  assigneeId  Int?
-  statusId    Int
-  description String   @default("")
-  deadline    DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  platform Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
-  assignee User?    @relation("WorkItemAssignee", fields: [assigneeId], references: [id])
-  status   Status   @relation(fields: [statusId], references: [id])
-
-  @@index([platformId])
-}
+// ─────────────────────────── Bugs ─────────────────────────
 
 model BugReport {
   id           Int      @id @default(autoincrement())
@@ -333,6 +321,8 @@ model BugReport {
   errorLog     String   @default("")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  createdBy    String   @default("")
+  updatedBy    String   @default("")
 
   platform    Platform        @relation(fields: [platformId], references: [id], onDelete: Cascade)
   reportedBy  User?           @relation("BugReportedBy", fields: [reportedById], references: [id])
@@ -461,4 +451,17 @@ model SupplementaryDoc {
   project Project @relation(fields: [projectId], references: [id])
 
   @@index([projectId])
+}
+
+model EntityReview {
+  id         Int      @id @default(autoincrement())
+  entityKey  String
+  userId     Int
+  userName   String
+  reviewedAt DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([entityKey, userId])
+  @@index([entityKey])
 }

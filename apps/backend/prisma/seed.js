@@ -53,7 +53,6 @@ async function main() {
     prisma.docPage.deleteMany(),
     prisma.bugAttachment.deleteMany(),
     prisma.bugReport.deleteMany(),
-    prisma.activeWorkItem.deleteMany(),
     prisma.QATestStep.deleteMany(),
     prisma.QAUserStory.deleteMany(),
     prisma.mockupElement.deleteMany(),

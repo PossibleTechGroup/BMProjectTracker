@@ -6,8 +6,10 @@ import featuresReducer from './slices/featuresSlice';
 import uiReducer from './slices/uiSlice';
 import editDataReducer from './slices/editDataSlice';
 import qaReducer from './slices/qaSlice';
-import workItemsReducer from './slices/workItemsSlice';
 import projectReducer from './slices/projectSlice';
+import statusesReducer from './slices/statusesSlice';
+import reviewsReducer from './slices/reviewsSlice';
+import commentsReducer from './slices/commentsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,7 +20,9 @@ export const store = configureStore({
     ui: uiReducer,
     editData: editDataReducer,
     qa: qaReducer,
-    workItems: workItemsReducer,
     project: projectReducer,
+    statuses: statusesReducer,
+    reviews: reviewsReducer,
+    comments: commentsReducer,
   },
 });

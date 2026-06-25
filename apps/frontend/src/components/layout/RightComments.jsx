@@ -1,37 +1,25 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { Send, MessageSquare } from 'lucide-react';
-
-import { apiFetch } from '@/lib/api';
+import { fetchComments, addComment, deleteComment } from '@/store/slices/commentsSlice';
 
 export default function RightComments({ activeSection }) {
-  const [comments, setComments] = useState([]);
+  const dispatch = useDispatch();
   const [text, setText] = useState('');
   const currentUser = useSelector(s => s.ui.currentUser);
+  const comments = useSelector(s => s.comments.bySection[activeSection]) || [];
 
   useEffect(() => {
-    if (!activeSection) return;
-    const fetchComments = async () => {
-      try {
-        const data = await apiFetch(`/comments/${activeSection}`);
-        setComments(data);
-      } catch (err) {
-        console.error('Failed to fetch comments', err);
-        setComments([]);
-      }
-    };
-    fetchComments();
-  }, [activeSection]);
+    if (activeSection) {
+      dispatch(fetchComments(activeSection));
+    }
+  }, [dispatch, activeSection]);
 
-  const addComment = async () => {
+  const handleAddComment = async () => {
     if (!text.trim() || !currentUser) return;
     try {
-      const newComment = await apiFetch(`/comments/${activeSection}`, {
-        method: 'POST',
-        body: JSON.stringify({ text: text.trim() })
-      });
-      setComments(prev => [...prev, newComment]);
+      await dispatch(addComment({ section: activeSection, text: text.trim() })).unwrap();
       setText('');
     } catch (err) {
       console.error('Failed to post comment', err);
@@ -40,10 +28,9 @@ export default function RightComments({ activeSection }) {
 
   const [confirmDelete, setConfirmDelete] = useState(null);
 
-  const deleteComment = async (id) => {
+  const handleDelete = async (id) => {
     try {
-      await apiFetch(`/comments/${id}`, { method: 'DELETE' });
-      setComments(prev => prev.map(c => c.id === id ? { ...c, isDeleted: true } : c));
+      await dispatch(deleteComment(id)).unwrap();
     } catch (err) {
       console.error('Failed to delete comment', err);
     }
@@ -53,7 +40,7 @@ export default function RightComments({ activeSection }) {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      addComment();
+      handleAddComment();
     }
   };
 
@@ -68,7 +55,7 @@ export default function RightComments({ activeSection }) {
             <p style={{ marginBottom: '24px', color: '#666' }}>Are you sure you want to delete this comment?</p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
               <button onClick={() => setConfirmDelete(null)} style={{ padding: '8px 16px', border: '1px solid #ccc', background: '#fff', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={() => deleteComment(confirmDelete)} style={{ padding: '8px 16px', border: 'none', background: '#f44336', color: '#fff', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
+              <button onClick={() => handleDelete(confirmDelete)} style={{ padding: '8px 16px', border: 'none', background: '#f44336', color: '#fff', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
             </div>
           </div>
         </div>
@@ -114,7 +101,7 @@ export default function RightComments({ activeSection }) {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
         />
-        <button className="doc-right-panel__send" onClick={addComment} disabled={!text.trim()}>
+        <button className="doc-right-panel__send" onClick={handleAddComment} disabled={!text.trim()}>
           <Send size={14} />
         </button>
       </div>
