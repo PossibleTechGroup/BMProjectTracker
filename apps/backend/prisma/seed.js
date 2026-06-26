@@ -87,6 +87,29 @@ async function main() {
   await prisma.projectMember.create({ data: { projectId: project.id, userId: admin.id, role: 'OWNER' } });
   console.log(`  Created project: ${project.name}`);
 
+  // Create specified users
+  const usersToSeed = [
+    { name: 'Mekdi', username: 'mekdi', email: 'mekdi@tracker.local', rawPassword: 'mekdi1234' },
+    { name: 'Haileab', username: 'haileab', email: 'haileab@tracker.local', rawPassword: 'haileab1234' },
+    { name: 'Yemisrach', username: 'yemisrach', email: 'yemisrach@tracker.local', rawPassword: 'yemisrach1234' },
+    { name: 'Bereket', username: 'bereket', email: 'bereket@tracker.local', rawPassword: 'bereket1234' },
+    { name: 'Simret', username: 'simret', email: 'simret@tracker.local', rawPassword: 'simret1234' },
+    { name: 'Misgana', username: 'misgana', email: 'misgana@tracker.local', rawPassword: 'misgana1234' },
+    { name: 'Robera (UI/UX)', username: 'robera1', email: 'robera1@tracker.local', rawPassword: 'robera1234' },
+    { name: 'Robera (Developer)', username: 'robera2', email: 'robera2@tracker.local', rawPassword: 'robera1234' },
+  ];
+
+  for (const u of usersToSeed) {
+    const hashed = await bcrypt.hash(u.rawPassword, 10);
+    const createdUser = await prisma.user.create({
+      data: { name: u.name, username: u.username, email: u.email, password: hashed, role: 'USER' }
+    });
+    await prisma.projectMember.create({
+      data: { projectId: project.id, userId: createdUser.id, role: 'MEMBER' }
+    });
+    console.log(`  Created user: ${createdUser.username} / ${u.rawPassword}`);
+  }
+
   // Create statuses
   for (const [type, statuses] of Object.entries(STATUS_TEMPLATES)) {
     for (const s of statuses) {
