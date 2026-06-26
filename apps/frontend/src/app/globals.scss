@@ -1376,6 +1376,80 @@ ul, ol {
 }
 
 /* ============================================================
+   MODAL
+   ============================================================ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: doc-fade-in 150ms ease both;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  animation: doc-fade-in 200ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+
+  &--sm { max-width: 400px; }
+  &--md { max-width: 520px; }
+  &--lg { max-width: 680px; }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px 0;
+  }
+
+  &__title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+  }
+
+  &__close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9CA3AF;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 150ms ease;
+
+    &:hover {
+      background: #F3F4F6;
+      color: #374151;
+    }
+  }
+
+  &__body {
+    padding: 20px 24px 24px;
+    overflow-y: auto;
+  }
+
+  &__footer {
+    padding: 0 24px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+}
+
+/* ============================================================
    REDUCED MOTION
    ============================================================ */
 

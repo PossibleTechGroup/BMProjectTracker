@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '@/store/slices/uiSlice';
 import { saveEdit } from '@/store/slices/editDataSlice';
-import { ChevronRight, ChevronLeft, LogOut, Users } from 'lucide-react';
+import { ChevronRight, ChevronLeft, LogOut, Users, Pencil } from 'lucide-react';
 import EditableField from '@/components/common/EditableField';
 import t from '@/locales/en.json';
 
@@ -215,9 +215,21 @@ export default function DocSidebar({ activeSection, onSelect, isWide, onToggleWi
   const currentUser = useSelector(s => s.ui.currentUser);
   const customPlatforms = useSelector(s => s.editData.customPlatforms || []);
   const edits = useSelector(s => s.editData);
+  const sidebarTitle = edits['sidebar.title'] || 'BM Ecosystem';
+  const sidebarSubtitle = edits['sidebar.subtitle'] || 'Full Project Documentation';
   const dispatch = useDispatch();
   const router = useRouter();
   const isAdmin = currentUser?.role === 'ADMIN';
+
+  const [isEditingHeader, setIsEditingHeader] = useState(false);
+  const [draftTitle, setDraftTitle] = useState('');
+  const [draftSubtitle, setDraftSubtitle] = useState('');
+
+  const handleStartEdit = () => {
+    setDraftTitle(sidebarTitle);
+    setDraftSubtitle(sidebarSubtitle);
+    setIsEditingHeader(true);
+  };
 
   const platforms = useSelector(s => s.platforms.items);
 
@@ -272,30 +284,109 @@ export default function DocSidebar({ activeSection, onSelect, isWide, onToggleWi
     router.push('/login');
   };
 
-  const sidebarTitle = edits['sidebar.title'] || 'BM Ecosystem';
-  const sidebarSubtitle = edits['sidebar.subtitle'] || 'Full Project Documentation';
 
   return (
     <aside className="doc-sidebar">
       <div className="doc-sidebar__header">
-        <h2 className="doc-sidebar__title">
-          {isAdmin ? (
-            <EditableField
-              value={sidebarTitle}
-              onSave={v => dispatch(saveEdit({ key: 'sidebar.title', value: v }))}
-              editing={isAdmin}
+        {isEditingHeader ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+            <input
+              value={draftTitle}
+              onChange={e => setDraftTitle(e.target.value)}
+              placeholder="Title"
+              style={{
+                padding: '6px 10px',
+                border: '1px solid #764ABC',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontWeight: '700',
+                color: '#764ABC',
+                width: '100%',
+                outline: 'none',
+                background: '#fff'
+              }}
+              autoFocus
             />
-          ) : sidebarTitle}
-        </h2>
-        <span className="doc-sidebar__subtitle">
-          {isAdmin ? (
-            <EditableField
-              value={sidebarSubtitle}
-              onSave={v => dispatch(saveEdit({ key: 'sidebar.subtitle', value: v }))}
-              editing={isAdmin}
+            <input
+              value={draftSubtitle}
+              onChange={e => setDraftSubtitle(e.target.value)}
+              placeholder="Subtitle"
+              style={{
+                padding: '6px 10px',
+                border: '1px solid #D1D5DB',
+                borderRadius: '4px',
+                fontSize: '11px',
+                fontWeight: '500',
+                color: '#6B7280',
+                width: '100%',
+                outline: 'none',
+                background: '#fff'
+              }}
             />
-          ) : sidebarSubtitle}
-        </span>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+              <button
+                onClick={() => {
+                  dispatch(saveEdit({ key: 'sidebar.title', value: draftTitle }));
+                  dispatch(saveEdit({ key: 'sidebar.subtitle', value: draftSubtitle }));
+                  setIsEditingHeader(false);
+                }}
+                style={{
+                  padding: '4px 12px',
+                  background: '#764ABC',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: 600
+                }}
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setIsEditingHeader(false)}
+                style={{
+                  padding: '4px 12px',
+                  background: '#e5e7eb',
+                  color: '#374151',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <h2 className="doc-sidebar__title" style={{ margin: 0 }}>{sidebarTitle}</h2>
+              <span className="doc-sidebar__subtitle">{sidebarSubtitle}</span>
+            </div>
+            {isAdmin && (
+              <button
+                onClick={handleStartEdit}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#764ABC',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px',
+                  borderRadius: '4px',
+                  flexShrink: 0
+                }}
+                title="Edit header"
+              >
+                <Pencil size={14} />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <button

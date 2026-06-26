@@ -12,7 +12,7 @@ services:
       - /app/node_modules
       - /app/.next
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     depends_on:
       - backend
     networks:
@@ -29,10 +29,10 @@ services:
       - ./apps/backend:/app
       - /app/node_modules
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/projecttracker
-      - NODE_ENV=development
-      - PORT=5000
-      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=${DATABASE_URL}
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+      - REDIS_URL=${REDIS_URL}
     depends_on:
       - db
       - redis
@@ -43,9 +43,9 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=projecttracker
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:

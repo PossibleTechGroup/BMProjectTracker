@@ -4,7 +4,7 @@ export function findByPlatform(platformId) {
   return prisma.bugReport.findMany({
     where: { platformId },
     orderBy: { createdAt: 'desc' },
-    include: { severity: true, status: true, reportedBy: true, attachments: true },
+    include: { severity: true, status: true, reportedBy: true, assignedTo: true, attachments: true },
   });
 }
 
@@ -12,7 +12,7 @@ export function findByProject(projectId) {
   return prisma.bugReport.findMany({
     where: { platform: { projectId } },
     orderBy: { createdAt: 'desc' },
-    include: { platform: true, severity: true, status: true, reportedBy: true, attachments: true },
+    include: { platform: true, severity: true, status: true, reportedBy: true, assignedTo: true, attachments: true },
   });
 }
 
@@ -24,15 +24,19 @@ export function create(data) {
       ...rest,
       ...(imageUrl ? { attachments: { create: [{ imageUrl }] } } : {}),
     },
-    include: { severity: true, status: true, reportedBy: true, attachments: true },
+    include: { severity: true, status: true, reportedBy: true, assignedTo: true, attachments: true },
   });
 }
 
 export function update(id, data) {
+  const { imageUrl, ...rest } = data;
   return prisma.bugReport.update({
     where: { id },
-    data,
-    include: { severity: true, status: true, reportedBy: true, attachments: true },
+    data: {
+      ...rest,
+      ...(imageUrl ? { attachments: { create: [{ imageUrl }] } } : {}),
+    },
+    include: { severity: true, status: true, reportedBy: true, assignedTo: true, attachments: true },
   });
 }
 

@@ -29,6 +29,7 @@ model User {
   featureRequests    FeatureRequest[] @relation("FeatureRequestRequestedBy")
   qaStories          QAUserStory[]   @relation("QAStoryTester")
   bugsReported       BugReport[]     @relation("BugReportedBy")
+  bugsAssigned       BugReport[]     @relation("BugAssignedTo")
   entityReviews      EntityReview[]
 }
 
@@ -314,6 +315,7 @@ model BugReport {
   title        String
   severityId   Int
   reportedById Int?
+  assignedToId Int?
   statusId     Int
   description  String   @default("")
   steps        String   @default("")
@@ -326,6 +328,7 @@ model BugReport {
 
   platform    Platform        @relation(fields: [platformId], references: [id], onDelete: Cascade)
   reportedBy  User?           @relation("BugReportedBy", fields: [reportedById], references: [id])
+  assignedTo  User?           @relation("BugAssignedTo", fields: [assignedToId], references: [id])
   severity    Severity        @relation(fields: [severityId], references: [id])
   status      Status          @relation(fields: [statusId], references: [id])
   attachments BugAttachment[]

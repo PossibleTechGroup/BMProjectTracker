@@ -18,7 +18,13 @@ export async function create(req, res) {
 
 export async function update(req, res) {
   const userName = req.user.name || req.user.username || 'Unknown';
-  const bug = await bugService.update(Number(req.params.id), { ...req.body, updatedBy: userName });
+  const data = { ...req.body };
+  if (data.platformId !== undefined) data.platformId = Number(data.platformId);
+  if (data.severityId !== undefined) data.severityId = Number(data.severityId);
+  if (data.statusId !== undefined) data.statusId = Number(data.statusId);
+  if (data.reportedById !== undefined) data.reportedById = data.reportedById ? Number(data.reportedById) : null;
+  if (data.assignedToId !== undefined) data.assignedToId = data.assignedToId ? Number(data.assignedToId) : null;
+  const bug = await bugService.update(Number(req.params.id), { ...data, updatedBy: userName });
   res.json(bug);
 }
 

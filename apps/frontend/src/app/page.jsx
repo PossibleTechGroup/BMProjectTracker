@@ -1,12 +1,12 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchPlatforms } from '@/store/slices/platformsSlice';
 import { fetchBugs } from '@/store/slices/bugsSlice';
 import { fetchFeatureRequests } from '@/store/slices/featuresSlice';
 import { fetchProjectData } from '@/store/slices/projectSlice';
-import { Pencil, X } from 'lucide-react';
+import { Pencil, X, ArrowLeft } from 'lucide-react';
 import UserManagementSection from '@/components/content/UserManagementSection';
 import DocSidebar from '@/components/layout/DocSidebar';
 import RightComments from '@/components/layout/RightComments';
@@ -34,6 +34,25 @@ import {
   PrevNextNav,
 } from '@/components/content/ExtraSections';
 
+const STORAGE_KEY = 'pt_lastUpdated';
+
+function getStoredUpdater(section) {
+  if (typeof window === 'undefined') return null;
+  try {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    const entry = data[section];
+    return entry ? entry.name : null;
+  } catch { return null; }
+}
+
+function setStoredUpdater(section, name) {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    data[section] = { name, at: Date.now() };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {}
+}
+
 export default function HomePage() {
   const [activeSection, setActiveSection] = useState('overview');
   const [isSidebarWide, setIsSidebarWide] = useState(false);
@@ -41,6 +60,21 @@ export default function HomePage() {
   const { currentUser, authStatus } = useSelector(s => s.ui);
   const isAdmin = currentUser?.role === 'ADMIN';
   const router = useRouter();
+  const [lastUpdatedBy, setLastUpdatedBy] = useState(null);
+  const prevEditing = useRef(editing);
+
+  useEffect(() => {
+    setLastUpdatedBy(getStoredUpdater(activeSection));
+  }, [activeSection]);
+
+  useEffect(() => {
+    if (prevEditing.current === true && editing === false && currentUser) {
+      const name = currentUser.name || currentUser.username;
+      setStoredUpdater(activeSection, name);
+      setLastUpdatedBy(name);
+    }
+    prevEditing.current = editing;
+  }, [editing, currentUser, activeSection]);
 
   const dispatch = useDispatch();
 
@@ -56,6 +90,22 @@ export default function HomePage() {
   }, [currentUser, authStatus, router, dispatch]);
 
   if (!currentUser) return null;
+
+  const getBackTarget = () => {
+    const s = activeSection;
+    if (!s || s === 'overview') return null;
+    if (s.startsWith('platform-') || s.startsWith('custom-') || s.startsWith('feature-')) return 'granular-docs';
+    if (s.startsWith('fr-platform-') || s.startsWith('freq-')) return 'feature-requests';
+    if (s.startsWith('bug-')) return 'active-bugs';
+    if (s.startsWith('qa-platform-') || s.startsWith('qa-story-')) return 'qa';
+    const map = {
+      intro: 'overview', links: 'overview', 'git-repos': 'overview',
+      'granular-docs': 'overview', 'feature-requests': 'overview',
+      'active-work-bugs': 'overview', 'active-bugs': 'active-work-bugs',
+      qa: 'overview', 'all-other-docs': 'overview', 'user-management': 'overview',
+    };
+    return map[s] || 'overview';
+  };
 
   const renderContent = () => {
     // Handle custom platforms (added by admin)
@@ -139,8 +189,18 @@ export default function HomePage() {
       <main className="doc-main">
         <div className="doc-content-area">
           <div className="doc-toolbar">
+            {getBackTarget() && (
+              <button
+                className="doc-toolbar__btn"
+                onClick={() => setActiveSection(getBackTarget())}
+                title="Go back"
+              >
+                <ArrowLeft size={16} />
+                <span>Back</span>
+              </button>
+            )}
             <button
-              className={`doc-toolbar__btn ${editing ? 'doc-toolbar__btn--active' : ''}`}
+              className={`doc-toolbar__btn doc-toolbar__link ${editing ? 'doc-toolbar__btn--active' : ''}`}
               onClick={() => setEditing(!editing)}
               title={editing ? 'Exit edit mode' : 'Edit this page'}
             >
@@ -152,6 +212,9 @@ export default function HomePage() {
             <EditProvider editing={editing}>
               {renderContent()}
             </EditProvider>
+          </div>
+          <div style={{ fontSize: 12, color: '#999', marginTop: 32, marginBottom: 16, fontStyle: 'italic', textAlign: 'right', borderTop: '1px solid #eee', paddingTop: 16 }}>
+            {lastUpdatedBy ? <>Last updated by <strong style={{ color: '#666', fontStyle: 'normal' }}>@{lastUpdatedBy}</strong></> : 'Never updated'}
           </div>
           <PrevNextNav activeSection={activeSection} onSelect={setActiveSection} />
         </div>
