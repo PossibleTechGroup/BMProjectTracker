@@ -32,10 +32,8 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - NODE_ENV=${NODE_ENV}
       - PORT=${PORT}
-      - REDIS_URL=${REDIS_URL}
     depends_on:
       - db
-      - redis
     networks:
       - tracker-net
     restart: unless-stopped
@@ -50,14 +48,6 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
       - '5432:5432'
-    networks:
-      - tracker-net
-    restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - '6379:6379'
     networks:
       - tracker-net
     restart: unless-stopped
