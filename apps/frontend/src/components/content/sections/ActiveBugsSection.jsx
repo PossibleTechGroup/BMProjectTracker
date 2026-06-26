@@ -226,17 +226,37 @@ export function ActiveBugsSection({ onSelect }) {
           const platformBugs = filteredBugs.filter(b => b.platformId === platform.id);
           return (
             <div key={platform.id} className="feature-block" style={{ marginBottom: 24 }}>
-              <div className="feature-block__header" style={{ cursor: 'pointer' }} onClick={() => onSelect(`platform-${platform.id}`)}>
+              <div className="feature-block__header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className="feature-bar" style={{ background: '#e53935' }}></span>
                   <h3 className="feature-block__name">{platform.name}</h3>
                 </div>
                 <span className="doc-badge badge--pending" style={{ fontSize: 11 }}>{platformBugs.length} bug{platformBugs.length !== 1 ? 's' : ''}</span>
               </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+                {platformBugs.map(bug => (
+                  <button
+                    key={bug.id}
+                    onClick={() => onSelect(`bug-${bug.id}`)}
+                    style={{
+                      textAlign: 'left', cursor: 'pointer', width: '100%',
+                      padding: '12px 16px', border: '1px solid #f0e0e0', borderRadius: 8,
+                      background: '#fff', transition: 'all 0.15s ease',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#e53935'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(229,57,53,0.1)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#f0e0e0'; e.currentTarget.style.boxShadow = 'none'; }}
+                  >
+                    <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a1a', marginBottom: 4 }}>{bug.title}</div>
+                    <div style={{ display: 'flex', gap: 12, fontSize: 12, color: '#888' }}>
+                      {bug.severity && <span style={{ color: bug.severity.color || '#888' }}>● {bug.severity.name}</span>}
+                      {bug.status && <span style={{ background: bug.status.color || '#9CA3AF', color: '#fff', padding: '1px 8px', borderRadius: 10, fontSize: 11 }}>{bug.status.name}</span>}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           );
-        })
-      )}
+        })      )}
     </section>
   );
 }
