@@ -13,5 +13,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Run the development server with hot-reloading
-CMD ["npm", "run", "dev"]
+# Run the production build and start the production server
+CMD ["sh", "-c", "npm run build && npm run start"]
