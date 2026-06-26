@@ -118,6 +118,26 @@ export function update(id, data) {
   return platformModel.update(id, data);
 }
 
-export function remove(id) {
-  return platformModel.remove(id);
+export async function remove(id) {
+  return prisma.$transaction(async (tx) => {
+    const features = await tx.feature.findMany({
+      where: { platformId: id },
+      select: { docPageId: true }
+    });
+    const docPageIds = features.map(f => f.docPageId).filter(Boolean);
+
+    if (docPageIds.length > 0) {
+      await tx.docPage.deleteMany({
+        where: { id: { in: docPageIds } }
+      });
+    }
+
+    await tx.docPage.deleteMany({
+      where: { platformId: id }
+    });
+
+    return tx.platform.delete({
+      where: { id }
+    });
+  });
 }
