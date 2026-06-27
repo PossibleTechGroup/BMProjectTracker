@@ -10,37 +10,36 @@ export default function SocketListener() {
   const projectId = useSelector(s => s.project.data?.id);
   const currentUser = useSelector(s => s.ui.currentUser);
   const connectedRef = useRef(false);
+  const projectIdRef = useRef(projectId);
+
+  projectIdRef.current = projectId;
 
   useEffect(() => {
-    if (!currentUser || connectedRef.current) return;
-    connectedRef.current = true;
+    if (!currentUser) return;
 
-    const socket = connectSocket();
+    if (!connectedRef.current) {
+      connectedRef.current = true;
+      const socket = connectSocket();
 
-    socket.on('connect', () => {
-      console.log('Socket connected for real-time updates');
-    });
+      socket.on('connect', () => {
+        console.log('Socket connected for real-time updates');
+      });
 
-    socket.on('project:updated', (data) => {
-      console.log('Real-time update received:', data);
-      dispatch(fetchProjectData());
-      if (projectId) {
-        dispatch(fetchPlatforms(projectId));
-      }
-    });
+      socket.on('project:updated', () => {
+        console.log('Real-time update received, refetching data');
+        dispatch(fetchProjectData());
+        dispatch(fetchPlatforms(projectIdRef.current));
+      });
 
-    socket.on('disconnect', () => {
-      console.log('Socket disconnected');
-    });
+      socket.on('disconnect', () => {
+        console.log('Socket disconnected');
+      });
+    }
 
     return () => {
-      socket.off('project:updated');
-      socket.off('connect');
-      socket.off('disconnect');
-      disconnectSocket();
-      connectedRef.current = false;
+      // Cleanup on unmount/logout only
     };
-  }, [dispatch, currentUser, projectId]);
+  }, [dispatch, currentUser]);
 
   return null;
 }
