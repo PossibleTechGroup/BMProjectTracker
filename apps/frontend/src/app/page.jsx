@@ -191,17 +191,18 @@ export default function HomePage() {
           </div>
           {(() => {
             const s = activeSection;
+            // For list/landing pages, surface whoever most recently touched
+            // anything in that collection (by updatedAt).
+            const latest = (list) => (list && list.length)
+              ? list.reduce((a, b) => (new Date(b.updatedAt) > new Date(a.updatedAt) ? b : a))
+              : null;
             let entity;
             // Project-level docs
             if (s === 'overview' || s === 'intro' || s === 'links' || s === 'git-repos') {
               entity = projectData;
-            // Platform docs + platform-scoped landing pages (feature requests / QA lists)
+            // Platform docs
             } else if (s.startsWith('platform-')) {
               entity = platforms.find(p => p.id === Number(s.replace('platform-', '')));
-            } else if (s.startsWith('fr-platform-')) {
-              entity = platforms.find(p => p.id === Number(s.replace('fr-platform-', '')));
-            } else if (s.startsWith('qa-platform-')) {
-              entity = platforms.find(p => p.id === Number(s.replace('qa-platform-', '')));
             // Feature docs (nested under a platform)
             } else if (s.startsWith('feature-')) {
               const featId = Number(s.replace('feature-', ''));
@@ -218,13 +219,30 @@ export default function HomePage() {
             // QA story detail
             } else if (s.startsWith('qa-story-')) {
               entity = qaStories.find(st => st.id === Number(s.replace('qa-story-', '')));
+            // Platform-scoped feature-request list
+            } else if (s.startsWith('fr-platform-')) {
+              const pid = Number(s.replace('fr-platform-', ''));
+              entity = latest(featureRequests.filter(f => f.platformId === pid));
+            // Platform-scoped QA list
+            } else if (s.startsWith('qa-platform-')) {
+              const pid = Number(s.replace('qa-platform-', ''));
+              entity = latest(qaStories.filter(st => st.platformId === pid));
+            // Top-level landing/list pages
+            } else if (s === 'granular-docs') {
+              entity = latest(platforms);
+            } else if (s === 'feature-requests') {
+              entity = latest(featureRequests);
+            } else if (s === 'active-bugs' || s === 'active-work-bugs') {
+              entity = latest(bugs);
+            } else if (s === 'qa' || s === 'qa-landing') {
+              entity = latest(qaStories);
             }
 
-            // List/landing pages (granular-docs, feature-requests, active-bugs, qa,
-            // all-other-docs, user-management, …) have no single entity — no footer.
-            if (!entity) return null;
+            // Final fallback so every page shows a footer (e.g. all-other-docs,
+            // user-management, custom platforms): fall back to the project.
+            if (!entity) entity = projectData;
 
-            const name = entity.updatedBy;
+            const name = entity?.updatedBy;
             return (
               <div style={{ fontSize: 12, color: '#999', marginTop: 32, marginBottom: 16, fontStyle: 'italic', textAlign: 'right', borderTop: '1px solid #eee', paddingTop: 16 }}>
                 {name ? <>Last updated by <strong style={{ color: '#666', fontStyle: 'normal' }}>@{name}</strong></> : 'Never updated'}
