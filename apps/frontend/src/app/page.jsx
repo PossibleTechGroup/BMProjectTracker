@@ -44,6 +44,7 @@ export default function HomePage() {
 
   const dispatch = useDispatch();
   const projectData = useSelector(s => s.project.data);
+  const platforms = useSelector(s => s.platforms.items);
 
   useEffect(() => {
     if (!currentUser && authStatus !== 'loading') {
@@ -186,7 +187,22 @@ export default function HomePage() {
             </EditProvider>
           </div>
           <div style={{ fontSize: 12, color: '#999', marginTop: 32, marginBottom: 16, fontStyle: 'italic', textAlign: 'right', borderTop: '1px solid #eee', paddingTop: 16 }}>
-            {projectData?.updatedBy ? <>Last updated by <strong style={{ color: '#666', fontStyle: 'normal' }}>@{projectData.updatedBy}</strong></> : 'Never updated'}
+            {(() => {
+              let entity;
+              if (activeSection === 'overview' || activeSection === 'intro' || activeSection === 'links' || activeSection === 'git-repos') {
+                entity = projectData;
+              } else if (activeSection.startsWith('platform-')) {
+                entity = platforms.find(p => p.id === Number(activeSection.replace('platform-', '')));
+              } else if (activeSection.startsWith('feature-')) {
+                const featId = Number(activeSection.replace('feature-', ''));
+                for (const p of platforms) {
+                  const f = (p.features || []).find(f => f.id === featId);
+                  if (f) { entity = f; break; }
+                }
+              }
+              const name = entity?.updatedBy;
+              return name ? <>Last updated by <strong style={{ color: '#666', fontStyle: 'normal' }}>@{name}</strong></> : 'Never updated';
+            })()}
           </div>
           <PrevNextNav activeSection={activeSection} onSelect={setActiveSection} />
         </div>
