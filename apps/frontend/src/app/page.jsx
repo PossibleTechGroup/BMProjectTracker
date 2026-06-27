@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchPlatforms } from '@/store/slices/platformsSlice';
@@ -34,25 +34,6 @@ import {
   PrevNextNav,
 } from '@/components/content/ExtraSections';
 
-const STORAGE_KEY = 'pt_lastUpdated';
-
-function getStoredUpdater(section) {
-  if (typeof window === 'undefined') return null;
-  try {
-    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    const entry = data[section];
-    return entry ? entry.name : null;
-  } catch { return null; }
-}
-
-function setStoredUpdater(section, name) {
-  try {
-    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    data[section] = { name, at: Date.now() };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {}
-}
-
 export default function HomePage() {
   const [activeSection, setActiveSection] = useState('overview');
   const [isSidebarWide, setIsSidebarWide] = useState(false);
@@ -60,21 +41,6 @@ export default function HomePage() {
   const { currentUser, authStatus } = useSelector(s => s.ui);
   const isAdmin = currentUser?.role === 'ADMIN';
   const router = useRouter();
-  const [lastUpdatedBy, setLastUpdatedBy] = useState(null);
-  const prevEditing = useRef(editing);
-
-  useEffect(() => {
-    setLastUpdatedBy(getStoredUpdater(activeSection));
-  }, [activeSection]);
-
-  useEffect(() => {
-    if (prevEditing.current === true && editing === false && currentUser) {
-      const name = currentUser.name || currentUser.username;
-      setStoredUpdater(activeSection, name);
-      setLastUpdatedBy(name);
-    }
-    prevEditing.current = editing;
-  }, [editing, currentUser, activeSection]);
 
   const dispatch = useDispatch();
   const projectData = useSelector(s => s.project.data);
@@ -220,7 +186,7 @@ export default function HomePage() {
             </EditProvider>
           </div>
           <div style={{ fontSize: 12, color: '#999', marginTop: 32, marginBottom: 16, fontStyle: 'italic', textAlign: 'right', borderTop: '1px solid #eee', paddingTop: 16 }}>
-            {lastUpdatedBy ? <>Last updated by <strong style={{ color: '#666', fontStyle: 'normal' }}>@{lastUpdatedBy}</strong></> : 'Never updated'}
+            {projectData?.updatedBy ? <>Last updated by <strong style={{ color: '#666', fontStyle: 'normal' }}>@{projectData.updatedBy}</strong></> : 'Never updated'}
           </div>
           <PrevNextNav activeSection={activeSection} onSelect={setActiveSection} />
         </div>
