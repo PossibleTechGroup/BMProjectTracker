@@ -1,6 +1,7 @@
 import * as qaModel from '../models/qa.js';
 import prisma from '../lib/prisma.js';
 import { getIO } from './socket.js';
+import { clearEntityReviews } from '../utils/review.js';
 
 export function getByPlatform(platformId) {
   return qaModel.findByPlatform(platformId);
@@ -19,6 +20,7 @@ export async function create(data) {
 
 export async function update(id, data) {
   const story = await qaModel.update(id, data);
+  await clearEntityReviews(`qa-story-${id}`);
   await prisma.platform.update({
     where: { id: story.platformId },
     data: { updatedBy: data.updatedBy }

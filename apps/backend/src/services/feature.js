@@ -1,6 +1,7 @@
 import * as featureModel from '../models/feature.js';
 import prisma from '../lib/prisma.js';
 import { getIO } from './socket.js';
+import { clearEntityReviews } from '../utils/review.js';
 
 export function getByPlatform(platformId) {
   return featureModel.findByPlatform(platformId);
@@ -12,6 +13,7 @@ export function create(data) {
 
 export async function update(id, data) {
   const feat = await featureModel.update(id, data);
+  await clearEntityReviews(`feature-${id}`);
   if (feat?.platformId) {
     await prisma.platform.update({
       where: { id: feat.platformId },

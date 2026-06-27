@@ -1,6 +1,7 @@
 import * as bugModel from '../models/bug.js';
 import prisma from '../lib/prisma.js';
 import { getIO } from './socket.js';
+import { clearEntityReviews } from '../utils/review.js';
 
 export function getByPlatform(platformId) {
   return bugModel.findByPlatform(platformId);
@@ -23,6 +24,7 @@ export async function create(data, userId, userName) {
 
 export async function update(id, data) {
   const bug = await bugModel.update(id, data);
+  await clearEntityReviews(`bug-${id}`);
   await prisma.platform.update({
     where: { id: bug.platformId },
     data: { updatedBy: data.updatedBy }

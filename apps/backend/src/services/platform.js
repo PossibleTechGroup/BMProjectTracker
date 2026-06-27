@@ -1,6 +1,7 @@
 import * as platformModel from '../models/platform.js';
 import prisma from '../lib/prisma.js';
 import { getIO } from './socket.js';
+import { clearEntityReviews } from '../utils/review.js';
 
 export function getByProject(projectId) {
   return platformModel.findByProject(projectId);
@@ -124,6 +125,7 @@ export async function create(data) {
 
 export async function update(id, data) {
   const platform = await platformModel.update(id, data);
+  await clearEntityReviews(`platform-${id}`);
   if (platform?.projectId) {
     await prisma.project.update({
       where: { id: platform.projectId },

@@ -33,6 +33,7 @@ import {
   QAStoryDetailView,
   PrevNextNav,
 } from '@/components/content/ExtraSections';
+import { NeedsReviewBanner } from '@/components/common/EntityWidgets';
 
 export default function HomePage() {
   const [activeSection, setActiveSection] = useState('overview');
@@ -186,6 +187,16 @@ export default function HomePage() {
           </div>
           <div className={editing ? 'doc-content--editing' : ''}>
             <EditProvider editing={editing}>
+              {(() => {
+                const s = activeSection;
+                let ek = null;
+                if (s.startsWith('platform-')) ek = `platform-${s.replace('platform-', '')}`;
+                else if (s.startsWith('feature-')) ek = `feature-${s.replace('feature-', '')}`;
+                else if (s.startsWith('freq-')) ek = `feature-request-${s.replace('freq-', '')}`;
+                else if (s.startsWith('bug-')) ek = `bug-${s.replace('bug-', '')}`;
+                else if (s.startsWith('qa-story-')) ek = `qa-story-${s.replace('qa-story-', '')}`;
+                return ek ? <NeedsReviewBanner entityKey={ek} /> : null;
+              })()}
               {renderContent()}
             </EditProvider>
           </div>

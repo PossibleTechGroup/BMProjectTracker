@@ -170,6 +170,81 @@ export function ReviewOverlay({ entityKey }) {
 }
 
 /* ============================================================
+   NeedsReviewBanner — prominent top-of-page banner
+   ============================================================ */
+export function NeedsReviewBanner({ entityKey }) {
+  const dispatch = useDispatch();
+  const currentUser = useSelector(s => s.ui.currentUser);
+  const reviews = useSelector(s => s.reviews.byEntity[entityKey]) || [];
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (entityKey) dispatch(fetchReviews(entityKey));
+  }, [dispatch, entityKey]);
+
+  if (!entityKey) return null;
+
+  const hasReviewed = reviews.some(r => r.userId === currentUser?.id);
+  if (hasReviewed) return null;
+
+  if (reviews.length === 0) {
+    return (
+      <div style={{
+        background: '#fff3e0', border: '1px solid #ffcc02', borderRadius: 10,
+        padding: '12px 18px', marginBottom: 20, display: 'flex', alignItems: 'center',
+        gap: 14, fontSize: 14, color: '#7a5800',
+      }}>
+        <span style={{ fontSize: 20, lineHeight: 1 }}>⚠️</span>
+        <span style={{ flex: 1 }}><strong>This page has never been reviewed.</strong> Please review the content and mark it as reviewed.</span>
+        <button
+          onClick={async () => {
+            setLoading(true);
+            try { await dispatch(markReviewed(entityKey)).unwrap(); } catch (e) { console.error(e); }
+            setLoading(false);
+          }}
+          disabled={loading}
+          style={{
+            background: '#7a5800', color: '#fff', border: 'none', borderRadius: 6,
+            padding: '7px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {loading ? '...' : 'Mark as Reviewed'}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      background: '#fff3e0', border: '1px solid #ffcc02', borderRadius: 10,
+      padding: '12px 18px', marginBottom: 20, display: 'flex', alignItems: 'center',
+      gap: 14, fontSize: 14, color: '#7a5800',
+    }}>
+      <span style={{ fontSize: 20, lineHeight: 1 }}>⚠️</span>
+      <span style={{ flex: 1 }}>
+        <strong>This page has changes you haven&apos;t reviewed yet.</strong> The content was modified since your last review. Please re-review.
+      </span>
+      <button
+        onClick={async () => {
+          setLoading(true);
+          try { await dispatch(markReviewed(entityKey)).unwrap(); } catch (e) { console.error(e); }
+          setLoading(false);
+        }}
+        disabled={loading}
+        style={{
+          background: '#7a5800', color: '#fff', border: 'none', borderRadius: 6,
+          padding: '7px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {loading ? '...' : 'Mark as Reviewed'}
+      </button>
+    </div>
+  );
+}
+
+/* ============================================================
    EntityMetadataFooter — "Created at … by … • Last updated at … by …"
    ============================================================ */
 export function EntityMetadataFooter({ createdAt, updatedAt, createdBy, updatedBy, show }) {

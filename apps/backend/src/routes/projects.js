@@ -125,9 +125,13 @@ router.post('/:id/supplementary-docs', async (req, res) => {
 router.put('/:id/supplementary-docs/:docId', async (req, res) => {
   try {
     const userName = req.user.username || req.user.name || 'Unknown';
+    const updateData = { ...req.body };
+    if (updateData.reviewed !== true) {
+      updateData.reviewed = false;
+    }
     const doc = await prisma.supplementaryDoc.update({
       where: { id: Number(req.params.docId) },
-      data: req.body,
+      data: updateData,
     });
     await prisma.project.update({
       where: { id: Number(req.params.id) },
