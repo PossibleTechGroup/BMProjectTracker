@@ -120,6 +120,11 @@ export function update(id, data) {
 
 export async function remove(id) {
   return prisma.$transaction(async (tx) => {
+    const platform = await tx.platform.findUnique({
+      where: { id },
+      select: { projectId: true }
+    });
+
     const features = await tx.feature.findMany({
       where: { platformId: id },
       select: { docPageId: true }
@@ -136,8 +141,10 @@ export async function remove(id) {
       where: { platformId: id }
     });
 
-    return tx.platform.delete({
+    await tx.platform.delete({
       where: { id }
     });
+
+    return platform;
   });
 }

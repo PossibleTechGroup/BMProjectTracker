@@ -1,5 +1,6 @@
 import * as featureModel from '../models/feature.js';
 import prisma from '../lib/prisma.js';
+import { getIO } from './socket.js';
 
 export function getByPlatform(platformId) {
   return featureModel.findByPlatform(platformId);
@@ -16,6 +17,7 @@ export async function update(id, data) {
       where: { id: feat.platformId },
       data: { updatedBy: data.updatedBy }
     });
+    getIO().emit('project:updated', { projectId: feat.projectId });
   }
   return feat;
 }
@@ -24,7 +26,7 @@ export async function remove(id, userName) {
   return prisma.$transaction(async (tx) => {
     const feature = await tx.feature.findUnique({
       where: { id },
-      select: { docPageId: true, platformId: true }
+      select: { docPageId: true, platformId: true, projectId: true }
     });
 
     const deleted = await tx.feature.delete({ where: { id } });
@@ -40,6 +42,9 @@ export async function remove(id, userName) {
         where: { id: feature.platformId },
         data: { updatedBy: userName }
       });
+    }
+    if (feature?.projectId) {
+      getIO().emit('project:updated', { projectId: feature.projectId });
     }
     return deleted;
   });

@@ -236,6 +236,8 @@ export default function HomePage() {
               entity = latest(bugs);
             } else if (s === 'qa' || s === 'qa-landing') {
               entity = latest(qaStories);
+            } else if (s === 'all-other-docs' || s === 'user-management') {
+              entity = projectData;
             }
 
             // Final fallback so every page shows a footer (e.g. all-other-docs,

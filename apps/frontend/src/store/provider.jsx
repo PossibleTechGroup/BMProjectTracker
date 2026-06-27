@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import { fetchMe } from './slices/uiSlice';
+import SocketListener from '@/components/common/SocketListener';
 
 function AuthInit({ children }) {
   useEffect(() => {
@@ -17,7 +18,10 @@ function AuthInit({ children }) {
 export default function StoreProvider({ children }) {
   return (
     <Provider store={store}>
-      <AuthInit>{children}</AuthInit>
+      <AuthInit>
+        <SocketListener />
+        {children}
+      </AuthInit>
     </Provider>
   );
 }

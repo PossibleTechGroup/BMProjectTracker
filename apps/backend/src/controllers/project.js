@@ -1,4 +1,5 @@
 import * as projectService from '../services/project.js';
+import { getIO } from '../services/socket.js';
 
 export async function getAll(req, res) {
   const projects = await projectService.getAll();
@@ -20,6 +21,7 @@ export async function create(req, res) {
 export async function update(req, res) {
   const userName = req.user.name || req.user.username || 'Unknown';
   const project = await projectService.update(Number(req.params.id), req.body, userName);
+  getIO().emit('project:updated', { projectId: project.id });
   res.json(project);
 }
 

@@ -31,11 +31,12 @@ export const addResourceLink = createAsyncThunk(
   'project/addResourceLink',
   async (linkData, { getState }) => {
     const projectId = getState().project.data?.id;
+    const userName = getState().ui.currentUser?.name || getState().ui.currentUser?.username || 'Unknown';
     const link = await apiFetch(`/projects/${projectId}/resource-links`, {
       method: 'POST',
       body: JSON.stringify(linkData),
     });
-    return link;
+    return { link, userName };
   }
 );
 
@@ -43,11 +44,12 @@ export const updateResourceLink = createAsyncThunk(
   'project/updateResourceLink',
   async ({ linkId, data }, { getState }) => {
     const projectId = getState().project.data?.id;
+    const userName = getState().ui.currentUser?.name || getState().ui.currentUser?.username || 'Unknown';
     const link = await apiFetch(`/projects/${projectId}/resource-links/${linkId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
-    return link;
+    return { link, userName };
   }
 );
 
@@ -55,10 +57,11 @@ export const deleteResourceLink = createAsyncThunk(
   'project/deleteResourceLink',
   async (linkId, { getState }) => {
     const projectId = getState().project.data?.id;
+    const userName = getState().ui.currentUser?.name || getState().ui.currentUser?.username || 'Unknown';
     await apiFetch(`/projects/${projectId}/resource-links/${linkId}`, {
       method: 'DELETE',
     });
-    return linkId;
+    return { linkId, userName };
   }
 );
 
@@ -67,11 +70,12 @@ export const addGitRepo = createAsyncThunk(
   'project/addGitRepo',
   async (repoData, { getState }) => {
     const projectId = getState().project.data?.id;
+    const userName = getState().ui.currentUser?.name || getState().ui.currentUser?.username || 'Unknown';
     const repo = await apiFetch(`/projects/${projectId}/git-repos`, {
       method: 'POST',
       body: JSON.stringify(repoData),
     });
-    return repo;
+    return { repo, userName };
   }
 );
 
@@ -79,11 +83,12 @@ export const updateGitRepo = createAsyncThunk(
   'project/updateGitRepo',
   async ({ repoId, data }, { getState }) => {
     const projectId = getState().project.data?.id;
+    const userName = getState().ui.currentUser?.name || getState().ui.currentUser?.username || 'Unknown';
     const repo = await apiFetch(`/projects/${projectId}/git-repos/${repoId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
-    return repo;
+    return { repo, userName };
   }
 );
 
@@ -91,10 +96,11 @@ export const deleteGitRepo = createAsyncThunk(
   'project/deleteGitRepo',
   async (repoId, { getState }) => {
     const projectId = getState().project.data?.id;
+    const userName = getState().ui.currentUser?.name || getState().ui.currentUser?.username || 'Unknown';
     await apiFetch(`/projects/${projectId}/git-repos/${repoId}`, {
       method: 'DELETE',
     });
-    return repoId;
+    return { repoId, userName };
   }
 );
 
@@ -103,11 +109,12 @@ export const addSupplementaryDoc = createAsyncThunk(
   'project/addSupplementaryDoc',
   async (docData, { getState }) => {
     const projectId = getState().project.data?.id;
+    const userName = getState().ui.currentUser?.name || getState().ui.currentUser?.username || 'Unknown';
     const doc = await apiFetch(`/projects/${projectId}/supplementary-docs`, {
       method: 'POST',
       body: JSON.stringify(docData),
     });
-    return doc;
+    return { doc, userName };
   }
 );
 
@@ -115,11 +122,12 @@ export const updateSupplementaryDoc = createAsyncThunk(
   'project/updateSupplementaryDoc',
   async ({ docId, data }, { getState }) => {
     const projectId = getState().project.data?.id;
+    const userName = getState().ui.currentUser?.name || getState().ui.currentUser?.username || 'Unknown';
     const doc = await apiFetch(`/projects/${projectId}/supplementary-docs/${docId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
-    return doc;
+    return { doc, userName };
   }
 );
 
@@ -127,10 +135,11 @@ export const deleteSupplementaryDoc = createAsyncThunk(
   'project/deleteSupplementaryDoc',
   async (docId, { getState }) => {
     const projectId = getState().project.data?.id;
+    const userName = getState().ui.currentUser?.name || getState().ui.currentUser?.username || 'Unknown';
     await apiFetch(`/projects/${projectId}/supplementary-docs/${docId}`, {
       method: 'DELETE',
     });
-    return docId;
+    return { docId, userName };
   }
 );
 
@@ -160,50 +169,65 @@ const projectSlice = createSlice({
       })
       // Resource Links
       .addCase(addResourceLink.fulfilled, (state, action) => {
-        if (state.data) state.data.resourceLinks = [...(state.data.resourceLinks || []), action.payload];
+        if (state.data) {
+          state.data.resourceLinks = [...(state.data.resourceLinks || []), action.payload.link];
+          state.data.updatedBy = action.payload.userName;
+        }
       })
       .addCase(updateResourceLink.fulfilled, (state, action) => {
         if (state.data) {
           state.data.resourceLinks = (state.data.resourceLinks || []).map(l =>
-            l.id === action.payload.id ? action.payload : l
+            l.id === action.payload.link.id ? action.payload.link : l
           );
+          state.data.updatedBy = action.payload.userName;
         }
       })
       .addCase(deleteResourceLink.fulfilled, (state, action) => {
         if (state.data) {
-          state.data.resourceLinks = (state.data.resourceLinks || []).filter(l => l.id !== action.payload);
+          state.data.resourceLinks = (state.data.resourceLinks || []).filter(l => l.id !== action.payload.linkId);
+          state.data.updatedBy = action.payload.userName;
         }
       })
       // Git Repos
       .addCase(addGitRepo.fulfilled, (state, action) => {
-        if (state.data) state.data.gitRepositories = [...(state.data.gitRepositories || []), action.payload];
+        if (state.data) {
+          state.data.gitRepositories = [...(state.data.gitRepositories || []), action.payload.repo];
+          state.data.updatedBy = action.payload.userName;
+        }
       })
       .addCase(updateGitRepo.fulfilled, (state, action) => {
         if (state.data) {
           state.data.gitRepositories = (state.data.gitRepositories || []).map(r =>
-            r.id === action.payload.id ? action.payload : r
+            r.id === action.payload.repo.id ? action.payload.repo : r
           );
+          state.data.updatedBy = action.payload.userName;
         }
       })
       .addCase(deleteGitRepo.fulfilled, (state, action) => {
         if (state.data) {
-          state.data.gitRepositories = (state.data.gitRepositories || []).filter(r => r.id !== action.payload);
+          state.data.gitRepositories = (state.data.gitRepositories || []).filter(r => r.id !== action.payload.repoId);
+          state.data.updatedBy = action.payload.userName;
         }
       })
       // Supplementary Docs
       .addCase(addSupplementaryDoc.fulfilled, (state, action) => {
-        if (state.data) state.data.supplementaryDocs = [...(state.data.supplementaryDocs || []), action.payload];
+        if (state.data) {
+          state.data.supplementaryDocs = [...(state.data.supplementaryDocs || []), action.payload.doc];
+          state.data.updatedBy = action.payload.userName;
+        }
       })
       .addCase(updateSupplementaryDoc.fulfilled, (state, action) => {
         if (state.data) {
           state.data.supplementaryDocs = (state.data.supplementaryDocs || []).map(d =>
-            d.id === action.payload.id ? action.payload : d
+            d.id === action.payload.doc.id ? action.payload.doc : d
           );
+          state.data.updatedBy = action.payload.userName;
         }
       })
       .addCase(deleteSupplementaryDoc.fulfilled, (state, action) => {
         if (state.data) {
-          state.data.supplementaryDocs = (state.data.supplementaryDocs || []).filter(d => d.id !== action.payload);
+          state.data.supplementaryDocs = (state.data.supplementaryDocs || []).filter(d => d.id !== action.payload.docId);
+          state.data.updatedBy = action.payload.userName;
         }
       });
   },
