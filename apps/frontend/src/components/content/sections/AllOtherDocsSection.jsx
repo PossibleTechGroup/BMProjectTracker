@@ -13,23 +13,33 @@ export function AllOtherDocsSection({ onSelect }) {
   const project = useSelector(s => s.project.data);
   const { editing } = useEdit();
   const docs = project?.supplementaryDocs || [];
-  
-  const [showAdd, setShowAdd] = useState(false);
-  const [newDoc, setNewDoc] = useState({ category: 'Supplementary Specs', title: '', url: '', stage: 'DRAFT', reviewed: false });
-  const [error, setError] = useState('');
+
+  const [addCategory, setAddCategory] = useState(null);
+  const [addForm, setAddForm] = useState({ title: '', url: '', stage: 'DRAFT', reviewed: false });
+  const [addError, setAddError] = useState('');
 
   const [editingDocId, setEditingDocId] = useState(null);
   const [editForm, setEditForm] = useState({ title: '', url: '', stage: 'DRAFT', reviewed: false, category: 'Supplementary Specs' });
 
+  const openAddForm = (category) => {
+    setAddCategory(category);
+    setAddForm({ title: '', url: '', stage: 'DRAFT', reviewed: false });
+    setAddError('');
+  };
+
+  const closeAddForm = () => {
+    setAddCategory(null);
+    setAddForm({ title: '', url: '', stage: 'DRAFT', reviewed: false });
+    setAddError('');
+  };
+
   const handleAdd = async () => {
-    if (!newDoc.title.trim()) { setError('Title is required.'); return; }
+    if (!addForm.title.trim()) { setAddError('Title is required.'); return; }
     try {
-      await dispatch(addSupplementaryDoc(newDoc)).unwrap();
-      setNewDoc({ category: 'Supplementary Specs', title: '', url: '', stage: 'DRAFT', reviewed: false });
-      setShowAdd(false);
-      setError('');
+      await dispatch(addSupplementaryDoc({ ...addForm, category: addCategory })).unwrap();
+      closeAddForm();
     } catch (e) {
-      setError(e.message || 'Failed to add doc.');
+      setAddError(e.message || 'Failed to add doc.');
     }
   };
 
@@ -53,52 +63,14 @@ export function AllOtherDocsSection({ onSelect }) {
       <Breadcrumb items={[{ label: 'Other Docs', id: 'all-other-docs' }]} onSelect={onSelect} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h1 className="doc-section__title" style={{ margin: 0 }}>All Other Docs</h1>
-        {editing && !showAdd && (
-          <button
-            style={{ padding: '6px 16px', background: '#764ABC', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
-            onClick={() => setShowAdd(true)}
-          >
-            + Add Document
-          </button>
-        )}
       </div>
       <p className="doc-section__text">
         Access supplementary system specifications, API references, deployment checklists, and external service documentation.
       </p>
 
-      {editing && showAdd && (
-        <div style={{ background: '#f5f3f7', border: '1px solid #764ABC', borderRadius: 10, padding: 16, marginBottom: 24 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#764ABC', marginBottom: 12 }}>Add Supplementary Document</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <select style={{ flex: 1, padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 13 }} value={newDoc.category} onChange={e => setNewDoc({...newDoc, category: e.target.value})}>
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <input style={{ flex: 2, padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 13 }} placeholder="Document title..." value={newDoc.title} onChange={e => setNewDoc({...newDoc, title: e.target.value})} />
-            </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <input style={{ flex: 2, padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 13 }} placeholder="Document URL (optional)..." value={newDoc.url} onChange={e => setNewDoc({...newDoc, url: e.target.value})} />
-              <select style={{ flex: 1, padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 13 }} value={newDoc.stage} onChange={e => setNewDoc({...newDoc, stage: e.target.value})}>
-                <option value="DRAFT">DRAFT</option>
-                <option value="REVIEW">REVIEW</option>
-                <option value="FINAL">FINAL</option>
-              </select>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
-                <input type="checkbox" checked={newDoc.reviewed} onChange={e => setNewDoc({...newDoc, reviewed: e.target.checked})} />
-                Reviewed
-              </label>
-            </div>
-            {error && <div style={{ color: '#c62828', fontSize: 13 }}>{error}</div>}
-            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-              <button style={{ padding: '8px 18px', background: '#764ABC', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600 }} onClick={handleAdd}>Save</button>
-              <button style={{ padding: '8px 18px', background: '#fff', color: '#666', border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', fontSize: 13 }} onClick={() => { setShowAdd(false); setError(''); }}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {CATEGORIES.map(category => {
         const categoryDocs = docs.filter(d => d.category === category);
+        const showAddForm = addCategory === category;
         if (!editing && categoryDocs.length === 0) return null;
         return (
           <div key={category} className="feature-block" style={{ marginBottom: 28 }}>
@@ -107,8 +79,47 @@ export function AllOtherDocsSection({ onSelect }) {
                 <span className="feature-bar" style={{ background: '#764ABC' }}></span>
                 <h3 className="feature-block__name">{category}</h3>
               </div>
-              <span className="doc-badge badge--pending" style={{ fontSize: 11 }}>{categoryDocs.length} item{categoryDocs.length !== 1 ? 's' : ''}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span className="doc-badge badge--pending" style={{ fontSize: 11 }}>{categoryDocs.length} item{categoryDocs.length !== 1 ? 's' : ''}</span>
+                {editing && !showAddForm && (
+                  <button
+                    style={{ padding: '4px 12px', background: '#764ABC', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+                    onClick={() => openAddForm(category)}
+                  >
+                    + Add
+                  </button>
+                )}
+              </div>
             </div>
+
+            {editing && showAddForm && (
+              <div style={{ background: '#f5f3f7', border: '1px solid #764ABC', borderRadius: 10, padding: 16, marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#764ABC', marginBottom: 10 }}>Add to {category}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <input style={{ flex: 2, padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 13 }} placeholder="Document title..." value={addForm.title} onChange={e => setAddForm({...addForm, title: e.target.value})} />
+                    <input style={{ flex: 2, padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 13 }} placeholder="Document URL (optional)..." value={addForm.url} onChange={e => setAddForm({...addForm, url: e.target.value})} />
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <select style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6, fontSize: 13 }} value={addForm.stage} onChange={e => setAddForm({...addForm, stage: e.target.value})}>
+                      <option value="DRAFT">DRAFT</option>
+                      <option value="REVIEW">REVIEW</option>
+                      <option value="FINAL">FINAL</option>
+                    </select>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
+                      <input type="checkbox" checked={addForm.reviewed} onChange={e => setAddForm({...addForm, reviewed: e.target.checked})} />
+                      Reviewed
+                    </label>
+                    <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+                      <button style={{ padding: '6px 14px', background: '#1a5c32', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }} onClick={handleAdd}>Save</button>
+                      <button style={{ padding: '6px 14px', background: '#fff', color: '#666', border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer', fontSize: 12 }} onClick={closeAddForm}>Cancel</button>
+                    </div>
+                  </div>
+                  {addError && <div style={{ color: '#c62828', fontSize: 13 }}>{addError}</div>}
+                </div>
+              </div>
+            )}
+
             <div className="feature-block__table">
               <table>
                 <thead><tr><th>Title</th><th>Stage</th><th>Status</th>{editing && <th style={{ width: 120, textAlign: 'center' }}>Actions</th>}</tr></thead>
@@ -179,7 +190,7 @@ export function AllOtherDocsSection({ onSelect }) {
                       </tr>
                     );
                   })}
-                  {categoryDocs.length === 0 && (
+                  {categoryDocs.length === 0 && !showAddForm && (
                     <tr><td colSpan={editing ? 4 : 3} style={{ textAlign: 'center', color: '#999', padding: '16px' }}>No documents under this category.</td></tr>
                   )}
                 </tbody>

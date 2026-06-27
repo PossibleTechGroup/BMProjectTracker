@@ -25,19 +25,23 @@ export default function SocketListener() {
         console.log('Socket connected for real-time updates');
       });
 
+      socket.on('connect_error', (err) => {
+        console.error('Socket connection error:', err.message);
+      });
+
       socket.on('project:updated', () => {
         console.log('Real-time update received, refetching data');
         dispatch(fetchProjectData());
         dispatch(fetchPlatforms(projectIdRef.current));
       });
 
-      socket.on('disconnect', () => {
-        console.log('Socket disconnected');
+      socket.on('disconnect', (reason) => {
+        console.log('Socket disconnected:', reason);
       });
     }
 
     return () => {
-      // Cleanup on unmount/logout only
+      // Keep socket alive across re-renders
     };
   }, [dispatch, currentUser]);
 
