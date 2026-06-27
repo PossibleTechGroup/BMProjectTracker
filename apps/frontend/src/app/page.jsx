@@ -222,11 +222,11 @@ export default function HomePage() {
             // Platform-scoped feature-request list
             } else if (s.startsWith('fr-platform-')) {
               const pid = Number(s.replace('fr-platform-', ''));
-              entity = latest(featureRequests.filter(f => f.platformId === pid));
+              entity = latest(featureRequests.filter(f => f.platformId === pid)) || platforms.find(p => p.id === pid);
             // Platform-scoped QA list
             } else if (s.startsWith('qa-platform-')) {
               const pid = Number(s.replace('qa-platform-', ''));
-              entity = latest(qaStories.filter(st => st.platformId === pid));
+              entity = latest(qaStories.filter(st => st.platformId === pid)) || platforms.find(p => p.id === pid);
             // Top-level landing/list pages
             } else if (s === 'granular-docs') {
               entity = latest(platforms);
