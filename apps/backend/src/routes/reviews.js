@@ -24,7 +24,7 @@ router.post('/:entityKey', authenticate, async (req, res) => {
   try {
     const { entityKey } = req.params;
     const userId = req.user.id;
-    const userName = req.user.name || req.user.username || 'Unknown';
+    const userName = req.user.username || req.user.name || 'Unknown';
 
     await prisma.entityReview.upsert({
       where: {

@@ -11,13 +11,13 @@ export async function getByProject(req, res) {
 }
 
 export async function create(req, res) {
-  const userName = req.user.name || req.user.username || 'Unknown';
+  const userName = req.user.username || req.user.name || 'Unknown';
   const bug = await bugService.create(req.body, req.user.id, userName);
   res.status(201).json(bug);
 }
 
 export async function update(req, res) {
-  const userName = req.user.name || req.user.username || 'Unknown';
+  const userName = req.user.username || req.user.name || 'Unknown';
   const data = { ...req.body };
   if (data.platformId !== undefined) data.platformId = Number(data.platformId);
   if (data.severityId !== undefined) data.severityId = Number(data.severityId);
@@ -29,7 +29,7 @@ export async function update(req, res) {
 }
 
 export async function remove(req, res) {
-  const userName = req.user.name || req.user.username || 'Unknown';
+  const userName = req.user.username || req.user.name || 'Unknown';
   await bugService.remove(Number(req.params.id), userName);
   res.status(204).end();
 }

@@ -12,19 +12,19 @@ export async function getById(req, res) {
 }
 
 export async function create(req, res) {
-  const userName = req.user.name || req.user.username || 'Unknown';
+  const userName = req.user.username || req.user.name || 'Unknown';
   const platform = await platformService.create({ ...req.body, createdBy: userName, updatedBy: userName });
   res.status(201).json(platform);
 }
 
 export async function update(req, res) {
-  const userName = req.user.name || req.user.username || 'Unknown';
+  const userName = req.user.username || req.user.name || 'Unknown';
   const platform = await platformService.update(Number(req.params.id), { ...req.body, updatedBy: userName });
   res.json(platform);
 }
 
 export async function remove(req, res) {
-  const userName = req.user.name || req.user.username || 'Unknown';
+  const userName = req.user.username || req.user.name || 'Unknown';
   await platformService.remove(Number(req.params.id), userName);
   res.status(204).end();
 }

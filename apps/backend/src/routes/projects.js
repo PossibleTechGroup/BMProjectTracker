@@ -19,7 +19,7 @@ router.delete('/:id/members/:memberId', projectController.removeMember);
 // === Resource Links CRUD ===
 router.post('/:id/resource-links', async (req, res) => {
   try {
-    const userName = req.user.name || req.user.username || 'Unknown';
+    const userName = req.user.username || req.user.name || 'Unknown';
     const link = await prisma.resourceLink.create({
       data: { ...req.body, projectId: Number(req.params.id) },
     });
@@ -34,7 +34,7 @@ router.post('/:id/resource-links', async (req, res) => {
 
 router.put('/:id/resource-links/:linkId', async (req, res) => {
   try {
-    const userName = req.user.name || req.user.username || 'Unknown';
+    const userName = req.user.username || req.user.name || 'Unknown';
     const link = await prisma.resourceLink.update({
       where: { id: Number(req.params.linkId) },
       data: req.body,
@@ -50,7 +50,7 @@ router.put('/:id/resource-links/:linkId', async (req, res) => {
 
 router.delete('/:id/resource-links/:linkId', async (req, res) => {
   try {
-    const userName = req.user.name || req.user.username || 'Unknown';
+    const userName = req.user.username || req.user.name || 'Unknown';
     await prisma.resourceLink.delete({ where: { id: Number(req.params.linkId) } });
     await prisma.project.update({
       where: { id: Number(req.params.id) },
@@ -64,7 +64,7 @@ router.delete('/:id/resource-links/:linkId', async (req, res) => {
 // === Git Repositories CRUD ===
 router.post('/:id/git-repos', async (req, res) => {
   try {
-    const userName = req.user.name || req.user.username || 'Unknown';
+    const userName = req.user.username || req.user.name || 'Unknown';
     const repo = await prisma.gitRepository.create({
       data: { ...req.body, projectId: Number(req.params.id) },
     });
@@ -79,7 +79,7 @@ router.post('/:id/git-repos', async (req, res) => {
 
 router.put('/:id/git-repos/:repoId', async (req, res) => {
   try {
-    const userName = req.user.name || req.user.username || 'Unknown';
+    const userName = req.user.username || req.user.name || 'Unknown';
     const repo = await prisma.gitRepository.update({
       where: { id: Number(req.params.repoId) },
       data: req.body,
@@ -95,7 +95,7 @@ router.put('/:id/git-repos/:repoId', async (req, res) => {
 
 router.delete('/:id/git-repos/:repoId', async (req, res) => {
   try {
-    const userName = req.user.name || req.user.username || 'Unknown';
+    const userName = req.user.username || req.user.name || 'Unknown';
     await prisma.gitRepository.delete({ where: { id: Number(req.params.repoId) } });
     await prisma.project.update({
       where: { id: Number(req.params.id) },
@@ -109,7 +109,7 @@ router.delete('/:id/git-repos/:repoId', async (req, res) => {
 // === Supplementary Docs CRUD ===
 router.post('/:id/supplementary-docs', async (req, res) => {
   try {
-    const userName = req.user.name || req.user.username || 'Unknown';
+    const userName = req.user.username || req.user.name || 'Unknown';
     const doc = await prisma.supplementaryDoc.create({
       data: { ...req.body, projectId: Number(req.params.id) },
     });
@@ -124,7 +124,7 @@ router.post('/:id/supplementary-docs', async (req, res) => {
 
 router.put('/:id/supplementary-docs/:docId', async (req, res) => {
   try {
-    const userName = req.user.name || req.user.username || 'Unknown';
+    const userName = req.user.username || req.user.name || 'Unknown';
     const doc = await prisma.supplementaryDoc.update({
       where: { id: Number(req.params.docId) },
       data: req.body,
@@ -140,7 +140,7 @@ router.put('/:id/supplementary-docs/:docId', async (req, res) => {
 
 router.delete('/:id/supplementary-docs/:docId', async (req, res) => {
   try {
-    const userName = req.user.name || req.user.username || 'Unknown';
+    const userName = req.user.username || req.user.name || 'Unknown';
     await prisma.supplementaryDoc.delete({ where: { id: Number(req.params.docId) } });
     await prisma.project.update({
       where: { id: Number(req.params.id) },
