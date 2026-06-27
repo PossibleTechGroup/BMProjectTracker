@@ -18,6 +18,7 @@ export async function update(req, res) {
 }
 
 export async function remove(req, res) {
-  await featureService.remove(Number(req.params.id));
+  const userName = req.user.name || req.user.username || 'Unknown';
+  await featureService.remove(Number(req.params.id), userName);
   res.status(204).end();
 }
