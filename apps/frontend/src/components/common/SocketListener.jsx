@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProjectData } from '@/store/slices/projectSlice';
 import { fetchPlatforms } from '@/store/slices/platformsSlice';
+import { fetchReviews } from '@/store/slices/reviewsSlice';
 import { connectSocket, disconnectSocket } from '@/lib/socket';
 
 export default function SocketListener() {
@@ -33,6 +34,11 @@ export default function SocketListener() {
         console.log('Real-time update received, refetching data');
         dispatch(fetchProjectData());
         dispatch(fetchPlatforms(projectIdRef.current));
+      });
+
+      socket.on('reviews:cleared', ({ entityKey }) => {
+        console.log('Reviews cleared for', entityKey, '- refetching');
+        dispatch(fetchReviews(entityKey));
       });
 
       socket.on('disconnect', (reason) => {
