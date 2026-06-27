@@ -12,12 +12,14 @@ export async function getById(req, res) {
 }
 
 export async function create(req, res) {
-  const project = await projectService.create(req.body, req.user.id);
+  const userName = req.user.name || req.user.username || 'Unknown';
+  const project = await projectService.create(req.body, req.user.id, userName);
   res.status(201).json(project);
 }
 
 export async function update(req, res) {
-  const project = await projectService.update(Number(req.params.id), req.body);
+  const userName = req.user.name || req.user.username || 'Unknown';
+  const project = await projectService.update(Number(req.params.id), req.body, userName);
   res.json(project);
 }
 

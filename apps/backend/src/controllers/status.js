@@ -7,12 +7,14 @@ export async function getByProject(req, res) {
 }
 
 export async function create(req, res) {
-  const status = await statusService.create(req.body);
+  const userName = req.user.name || req.user.username || 'Unknown';
+  const status = await statusService.create({ ...req.body, createdBy: userName, updatedBy: userName });
   res.status(201).json(status);
 }
 
 export async function update(req, res) {
-  const status = await statusService.update(Number(req.params.id), req.body);
+  const userName = req.user.name || req.user.username || 'Unknown';
+  const status = await statusService.update(Number(req.params.id), { ...req.body, updatedBy: userName });
   res.json(status);
 }
 

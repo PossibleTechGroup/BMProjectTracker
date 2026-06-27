@@ -58,6 +58,8 @@ model Project {
   aboutText    String   @default("")
   navigateText String   @default("")
   sectionsJson Json?
+  createdBy   String   @default("")
+  updatedBy   String   @default("")
   createdAt    DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -98,6 +100,8 @@ model Status {
   order     Int      @default(0)
   isDefault Boolean  @default(false)
   isFinal   Boolean  @default(false)
+  createdBy String   @default("")
+  updatedBy String   @default("")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -119,6 +123,8 @@ model Severity {
   color     String   @default("#EF4444")
   order     Int      @default(0)
   isDefault Boolean  @default(false)
+  createdBy String   @default("")
+  updatedBy String   @default("")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -192,6 +198,8 @@ model SubTask {
   statusId      Int
   addedToDocs   Boolean  @default(false)
   order         Int      @default(0)
+  createdBy     String   @default("")
+  updatedBy     String   @default("")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

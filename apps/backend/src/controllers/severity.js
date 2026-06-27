@@ -6,12 +6,14 @@ export async function getByProject(req, res) {
 }
 
 export async function create(req, res) {
-  const severity = await severityService.create(req.body);
+  const userName = req.user.name || req.user.username || 'Unknown';
+  const severity = await severityService.create({ ...req.body, createdBy: userName, updatedBy: userName });
   res.status(201).json(severity);
 }
 
 export async function update(req, res) {
-  const severity = await severityService.update(Number(req.params.id), req.body);
+  const userName = req.user.name || req.user.username || 'Unknown';
+  const severity = await severityService.update(Number(req.params.id), { ...req.body, updatedBy: userName });
   res.json(severity);
 }
 

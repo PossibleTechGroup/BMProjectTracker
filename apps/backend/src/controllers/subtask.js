@@ -6,12 +6,14 @@ export async function getByFeature(req, res) {
 }
 
 export async function create(req, res) {
-  const subtask = await subtaskService.create(req.body);
+  const userName = req.user.name || req.user.username || 'Unknown';
+  const subtask = await subtaskService.create({ ...req.body, createdBy: userName, updatedBy: userName });
   res.status(201).json(subtask);
 }
 
 export async function update(req, res) {
-  const subtask = await subtaskService.update(Number(req.params.id), req.body);
+  const userName = req.user.name || req.user.username || 'Unknown';
+  const subtask = await subtaskService.update(Number(req.params.id), { ...req.body, updatedBy: userName });
   res.json(subtask);
 }
 

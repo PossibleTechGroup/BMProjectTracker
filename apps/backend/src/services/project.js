@@ -8,15 +8,17 @@ export function getById(id) {
   return projectModel.findById(id);
 }
 
-export function create(data, userId) {
+export function create(data, userId, userName) {
   return projectModel.create({
     ...data,
+    createdBy: userName,
+    updatedBy: userName,
     members: { create: { userId, role: 'OWNER' } },
   });
 }
 
-export function update(id, data) {
-  return projectModel.update(id, data);
+export function update(id, data, userName) {
+  return projectModel.update(id, { ...data, updatedBy: userName });
 }
 
 export function remove(id) {
