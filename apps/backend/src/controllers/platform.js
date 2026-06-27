@@ -27,9 +27,7 @@ export async function update(req, res) {
 }
 
 export async function remove(req, res) {
-  const result = await platformService.remove(Number(req.params.id));
-  if (result?.projectId) {
-    getIO().emit('project:updated', { projectId: result.projectId });
-  }
+  const userName = req.user.name || req.user.username || 'Unknown';
+  const result = await platformService.remove(Number(req.params.id), userName);
   res.status(204).end();
 }

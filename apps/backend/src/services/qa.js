@@ -1,17 +1,44 @@
 import * as qaModel from '../models/qa.js';
+import prisma from '../lib/prisma.js';
+import { getIO } from './socket.js';
 
 export function getByPlatform(platformId) {
   return qaModel.findByPlatform(platformId);
 }
 
-export function create(data) {
-  return qaModel.create(data);
+export async function create(data) {
+  const story = await qaModel.create(data);
+  await prisma.platform.update({
+    where: { id: story.platformId },
+    data: { updatedBy: data.updatedBy }
+  });
+  const platform = await prisma.platform.findUnique({ where: { id: story.platformId }, select: { projectId: true } });
+  getIO().emit('project:updated', { projectId: platform?.projectId });
+  return story;
 }
 
-export function update(id, data) {
-  return qaModel.update(id, data);
+export async function update(id, data) {
+  const story = await qaModel.update(id, data);
+  await prisma.platform.update({
+    where: { id: story.platformId },
+    data: { updatedBy: data.updatedBy }
+  });
+  const platform = await prisma.platform.findUnique({ where: { id: story.platformId }, select: { projectId: true } });
+  getIO().emit('project:updated', { projectId: platform?.projectId });
+  return story;
 }
 
-export function remove(id) {
-  return qaModel.remove(id);
+export async function remove(id, userName) {
+  const story = await qaModel.remove(id);
+  if (story?.platformId) {
+    await prisma.platform.update({
+      where: { id: story.platformId },
+      data: { updatedBy: userName }
+    });
+  }
+  const platform = story?.platformId
+    ? await prisma.platform.findUnique({ where: { id: story.platformId }, select: { projectId: true } })
+    : null;
+  getIO().emit('project:updated', { projectId: platform?.projectId });
+  return { ...story, projectId: platform?.projectId };
 }

@@ -32,9 +32,7 @@ export async function update(req, res) {
 }
 
 export async function remove(req, res) {
-  const deleted = await bugService.remove(Number(req.params.id));
-  if (deleted?.projectId) {
-    getIO().emit('project:updated', { projectId: deleted.projectId });
-  }
+  const userName = req.user.name || req.user.username || 'Unknown';
+  const deleted = await bugService.remove(Number(req.params.id), userName);
   res.status(204).end();
 }

@@ -13,6 +13,11 @@ export async function create(data) {
   return prisma.$transaction(async (tx) => {
     const platform = await tx.platform.create({ data });
 
+    await tx.project.update({
+      where: { id: data.projectId },
+      data: { updatedBy: data.updatedBy }
+    });
+
     const defaultStatusRequest = await tx.status.findFirst({ where: { projectId: data.projectId, type: 'request', isDefault: true } });
     const defaultStatusWork = await tx.status.findFirst({ where: { projectId: data.projectId, type: 'work', isDefault: true } });
     const defaultStatusBug = await tx.status.findFirst({ where: { projectId: data.projectId, type: 'bug', isDefault: true } });
@@ -114,11 +119,18 @@ export async function create(data) {
   });
 }
 
-export function update(id, data) {
-  return platformModel.update(id, data);
+export async function update(id, data) {
+  const platform = await platformModel.update(id, data);
+  if (platform?.projectId) {
+    await prisma.project.update({
+      where: { id: platform.projectId },
+      data: { updatedBy: data.updatedBy }
+    });
+  }
+  return platform;
 }
 
-export async function remove(id) {
+export async function remove(id, userName) {
   return prisma.$transaction(async (tx) => {
     const platform = await tx.platform.findUnique({
       where: { id },
@@ -144,6 +156,13 @@ export async function remove(id) {
     await tx.platform.delete({
       where: { id }
     });
+
+    if (platform?.projectId) {
+      await tx.project.update({
+        where: { id: platform.projectId },
+        data: { updatedBy: userName }
+      });
+    }
 
     return platform;
   });
