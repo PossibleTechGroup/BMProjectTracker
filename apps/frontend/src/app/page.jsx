@@ -45,6 +45,9 @@ export default function HomePage() {
   const dispatch = useDispatch();
   const projectData = useSelector(s => s.project.data);
   const platforms = useSelector(s => s.platforms.items);
+  const bugs = useSelector(s => s.bugs.items);
+  const featureRequests = useSelector(s => s.features.items);
+  const qaStories = useSelector(s => s.qa.items);
 
   useEffect(() => {
     if (!currentUser && authStatus !== 'loading') {
@@ -186,24 +189,48 @@ export default function HomePage() {
               {renderContent()}
             </EditProvider>
           </div>
-          <div style={{ fontSize: 12, color: '#999', marginTop: 32, marginBottom: 16, fontStyle: 'italic', textAlign: 'right', borderTop: '1px solid #eee', paddingTop: 16 }}>
-            {(() => {
-              let entity;
-              if (activeSection === 'overview' || activeSection === 'intro' || activeSection === 'links' || activeSection === 'git-repos') {
-                entity = projectData;
-              } else if (activeSection.startsWith('platform-')) {
-                entity = platforms.find(p => p.id === Number(activeSection.replace('platform-', '')));
-              } else if (activeSection.startsWith('feature-')) {
-                const featId = Number(activeSection.replace('feature-', ''));
-                for (const p of platforms) {
-                  const f = (p.features || []).find(f => f.id === featId);
-                  if (f) { entity = f; break; }
-                }
+          {(() => {
+            const s = activeSection;
+            let entity;
+            // Project-level docs
+            if (s === 'overview' || s === 'intro' || s === 'links' || s === 'git-repos') {
+              entity = projectData;
+            // Platform docs + platform-scoped landing pages (feature requests / QA lists)
+            } else if (s.startsWith('platform-')) {
+              entity = platforms.find(p => p.id === Number(s.replace('platform-', '')));
+            } else if (s.startsWith('fr-platform-')) {
+              entity = platforms.find(p => p.id === Number(s.replace('fr-platform-', '')));
+            } else if (s.startsWith('qa-platform-')) {
+              entity = platforms.find(p => p.id === Number(s.replace('qa-platform-', '')));
+            // Feature docs (nested under a platform)
+            } else if (s.startsWith('feature-')) {
+              const featId = Number(s.replace('feature-', ''));
+              for (const p of platforms) {
+                const f = (p.features || []).find(f => f.id === featId);
+                if (f) { entity = f; break; }
               }
-              const name = entity?.updatedBy;
-              return name ? <>Last updated by <strong style={{ color: '#666', fontStyle: 'normal' }}>@{name}</strong></> : 'Never updated';
-            })()}
-          </div>
+            // Bug detail
+            } else if (s.startsWith('bug-')) {
+              entity = bugs.find(b => b.id === Number(s.replace('bug-', '')));
+            // Feature request detail
+            } else if (s.startsWith('freq-')) {
+              entity = featureRequests.find(f => f.id === Number(s.replace('freq-', '')));
+            // QA story detail
+            } else if (s.startsWith('qa-story-')) {
+              entity = qaStories.find(st => st.id === Number(s.replace('qa-story-', '')));
+            }
+
+            // List/landing pages (granular-docs, feature-requests, active-bugs, qa,
+            // all-other-docs, user-management, …) have no single entity — no footer.
+            if (!entity) return null;
+
+            const name = entity.updatedBy;
+            return (
+              <div style={{ fontSize: 12, color: '#999', marginTop: 32, marginBottom: 16, fontStyle: 'italic', textAlign: 'right', borderTop: '1px solid #eee', paddingTop: 16 }}>
+                {name ? <>Last updated by <strong style={{ color: '#666', fontStyle: 'normal' }}>@{name}</strong></> : 'Never updated'}
+              </div>
+            );
+          })()}
           <PrevNextNav activeSection={activeSection} onSelect={setActiveSection} />
         </div>
         <RightComments activeSection={activeSection} />
