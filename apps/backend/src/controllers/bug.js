@@ -1,5 +1,4 @@
 import * as bugService from '../services/bug.js';
-import { getIO } from '../services/socket.js';
 
 export async function getByPlatform(req, res) {
   const bugs = await bugService.getByPlatform(Number(req.params.platformId));
@@ -14,7 +13,6 @@ export async function getByProject(req, res) {
 export async function create(req, res) {
   const userName = req.user.name || req.user.username || 'Unknown';
   const bug = await bugService.create(req.body, req.user.id, userName);
-  getIO().emit('project:updated', { projectId: bug.projectId });
   res.status(201).json(bug);
 }
 
@@ -27,12 +25,11 @@ export async function update(req, res) {
   if (data.reportedById !== undefined) data.reportedById = data.reportedById ? Number(data.reportedById) : null;
   if (data.assignedToId !== undefined) data.assignedToId = data.assignedToId ? Number(data.assignedToId) : null;
   const bug = await bugService.update(Number(req.params.id), { ...data, updatedBy: userName });
-  getIO().emit('project:updated', { projectId: bug.projectId });
   res.json(bug);
 }
 
 export async function remove(req, res) {
   const userName = req.user.name || req.user.username || 'Unknown';
-  const deleted = await bugService.remove(Number(req.params.id), userName);
+  await bugService.remove(Number(req.params.id), userName);
   res.status(204).end();
 }

@@ -1,5 +1,6 @@
 import * as platformModel from '../models/platform.js';
 import prisma from '../lib/prisma.js';
+import { getIO } from './socket.js';
 
 export function getByProject(projectId) {
   return platformModel.findByProject(projectId);
@@ -10,7 +11,7 @@ export function getById(id) {
 }
 
 export async function create(data) {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const platform = await tx.platform.create({ data });
 
     await tx.project.update({
@@ -117,6 +118,8 @@ export async function create(data) {
 
     return { platform: fullPlatform, featureRequests, bugReports, qaStories };
   });
+  getIO().emit('project:updated', { projectId: data.projectId });
+  return result;
 }
 
 export async function update(id, data) {

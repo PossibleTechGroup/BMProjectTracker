@@ -1,4 +1,5 @@
 import * as projectModel from '../models/project.js';
+import { getIO } from './socket.js';
 
 export function getAll() {
   return projectModel.findAll();
@@ -17,8 +18,10 @@ export function create(data, userId, userName) {
   });
 }
 
-export function update(id, data, userName) {
-  return projectModel.update(id, { ...data, updatedBy: userName });
+export async function update(id, data, userName) {
+  const project = await projectModel.update(id, { ...data, updatedBy: userName });
+  getIO().emit('project:updated', { projectId: project.id });
+  return project;
 }
 
 export function remove(id) {
