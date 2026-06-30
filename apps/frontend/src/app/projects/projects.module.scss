@@ -250,6 +250,12 @@
   font-weight: 500;
 }
 
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .cardAction {
   display: flex;
   align-items: center;
@@ -258,6 +264,26 @@
   font-size: 13px;
   font-weight: 600;
   transition: all 0.2s ease;
+}
+
+.deleteBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #fef2f2;
+    color: #ef4444;
+    border-color: #fecaca;
+  }
 }
 
 .empty {
@@ -362,6 +388,26 @@
 
   &:hover:not(:disabled) {
     background: #593d8f;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btnDanger {
+  padding: 10px 20px;
+  background: #ef4444;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #dc2626;
   }
 
   &:disabled {

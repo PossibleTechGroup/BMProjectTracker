@@ -375,7 +375,7 @@ model DocPage {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  project  Project     @relation(fields: [projectId], references: [id])
+  project  Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
   parent   DocPage?    @relation("DocPageTree", fields: [parentId], references: [id])
   children DocPage[]   @relation("DocPageTree")
   platform Platform?   @relation(fields: [platformId], references: [id])
@@ -409,7 +409,7 @@ model EditHistory {
   changeSummary String   @default("")
   editedAt      DateTime @default(now())
 
-  project  Project @relation(fields: [projectId], references: [id])
+  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   editedBy User?   @relation(fields: [editedById], references: [id])
 
   @@index([projectId, entityType, entityId])
@@ -427,7 +427,7 @@ model ResourceLink {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  project Project @relation(fields: [projectId], references: [id])
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
 }
@@ -442,7 +442,7 @@ model GitRepository {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  project Project @relation(fields: [projectId], references: [id])
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
 }
@@ -459,7 +459,7 @@ model SupplementaryDoc {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  project Project @relation(fields: [projectId], references: [id])
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
 }

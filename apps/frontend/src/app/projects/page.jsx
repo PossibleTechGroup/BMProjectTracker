@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchAllProjects, setActiveProject } from '@/store/slices/projectSlice';
+import { fetchAllProjects, setActiveProject, deleteProject } from '@/store/slices/projectSlice';
 import { logout } from '@/store/slices/uiSlice';
-import { FolderGit2, LogOut, Plus, Search, Users, LayoutGrid, ChevronRight } from 'lucide-react';
+import { FolderGit2, LogOut, Plus, Search, Users, LayoutGrid, ChevronRight, Trash2 } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import styles from './projects.module.scss';
 import CustomModal from '@/components/common/CustomModal';
@@ -21,6 +21,8 @@ export default function ProjectSelectorPage() {
   const [newProject, setNewProject] = useState({ name: '', slug: '', description: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createError, setCreateError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isAdmin = currentUser?.role === 'ADMIN';
 
@@ -60,6 +62,19 @@ export default function ProjectSelectorPage() {
       setCreateError(err.message || 'Failed to create project');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      await dispatch(deleteProject(deleteTarget.id)).unwrap();
+      setDeleteTarget(null);
+    } catch (err) {
+      alert(err.message || 'Failed to delete project');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -143,9 +158,20 @@ export default function ProjectSelectorPage() {
                       <span>{project._count?.platforms || 0}</span>
                     </div>
                   </div>
-                  <div className={styles.cardAction}>
-                    <span>Open</span>
-                    <ChevronRight size={16} />
+                  <div className={styles.cardActions}>
+                    {isAdmin && (
+                      <button
+                        className={styles.deleteBtn}
+                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(project); }}
+                        title="Delete project"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                    <div className={styles.cardAction}>
+                      <span>Open</span>
+                      <ChevronRight size={16} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -210,6 +236,40 @@ export default function ProjectSelectorPage() {
             </button>
           </div>
         </form>
+      </CustomModal>
+
+      <CustomModal
+        isOpen={!!deleteTarget}
+        onClose={() => !isDeleting && setDeleteTarget(null)}
+        title="Delete Project"
+      >
+        {deleteTarget && (
+          <div className={styles.form}>
+            <p style={{ color: '#4b5563', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+              Are you sure you want to delete <strong>{deleteTarget.name}</strong>?
+              This will permanently remove all platforms, features, docs, and data
+              associated with this project. This action cannot be undone.
+            </p>
+            <div className={styles.formActions}>
+              <button
+                type="button"
+                className={styles.btnCancel}
+                onClick={() => setDeleteTarget(null)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.btnDanger}
+                onClick={handleDeleteProject}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Project'}
+              </button>
+            </div>
+          </div>
+        )}
       </CustomModal>
     </div>
   );

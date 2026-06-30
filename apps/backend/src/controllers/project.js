@@ -91,7 +91,8 @@ export async function update(req, res) {
 }
 
 export async function remove(req, res) {
-  await projectService.remove(Number(req.params.id));
+  const userName = req.user.username || req.user.name || 'Unknown';
+  await projectService.remove(Number(req.params.id), userName);
   res.status(204).end();
 }
 

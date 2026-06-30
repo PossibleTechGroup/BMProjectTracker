@@ -28,8 +28,10 @@ export async function update(id, data, userName) {
   return project;
 }
 
-export function remove(id) {
-  return projectModel.remove(id);
+export async function remove(id, userName) {
+  const project = await projectModel.remove(id);
+  getIO().emit('project:updated', { projectId: id });
+  return project;
 }
 
 export function addMember(projectId, userId, role) {

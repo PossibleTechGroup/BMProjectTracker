@@ -19,6 +19,14 @@ export const fetchProjectData = createAsyncThunk(
   }
 );
 
+export const deleteProject = createAsyncThunk(
+  'project/deleteProject',
+  async (projectId) => {
+    await apiFetch(`/projects/${projectId}`, { method: 'DELETE' });
+    return projectId;
+  }
+);
+
 export const updateProjectField = createAsyncThunk(
   'project/updateProjectField',
   async ({ field, value }, { getState }) => {
@@ -181,6 +189,14 @@ const projectSlice = createSlice({
       .addCase(fetchAllProjects.rejected, (state, action) => {
         state.listStatus = 'failed';
         state.error = action.error.message;
+      })
+      .addCase(deleteProject.fulfilled, (state, action) => {
+        state.projectsList = state.projectsList.filter(p => p.id !== action.payload);
+        if (state.activeProjectId === action.payload) {
+          state.activeProjectId = null;
+          state.data = null;
+          if (typeof window !== 'undefined') localStorage.removeItem('activeProjectId');
+        }
       })
       .addCase(fetchProjectData.pending, (state) => {
         state.status = 'loading';
