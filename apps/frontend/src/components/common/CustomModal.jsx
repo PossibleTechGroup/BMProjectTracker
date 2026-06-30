@@ -10,6 +10,7 @@ export default function CustomModal({
   cancelText = 'Cancel',
   onConfirm,
   onClose,
+  children,
 }) {
   if (!isOpen) return null;
 
@@ -57,7 +58,7 @@ export default function CustomModal({
         background: '#fff',
         borderRadius: '12px',
         width: '100%',
-        maxWidth: '400px',
+        maxWidth: children ? '500px' : '400px',
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
         border: '1px solid #e5e7eb',
         overflow: 'hidden',
@@ -70,61 +71,79 @@ export default function CustomModal({
           width: '100%'
         }} />
         
-        <div style={{ padding: '24px', display: 'flex', gap: '16px' }}>
-          <div style={{ flexShrink: 0 }}>
-            {getIcon()}
+        {children ? (
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#111827' }}>
+                {title}
+              </h3>
+              <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}>
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ width: '100%' }}>
+              {children}
+            </div>
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#111827' }}>
-              {title}
-            </h3>
-            <p style={{ margin: 0, fontSize: '14px', color: '#4B5563', lineHeight: 1.5 }}>
-              {message}
-            </p>
-          </div>
-        </div>
+        ) : (
+          <>
+            <div style={{ padding: '24px', display: 'flex', gap: '16px' }}>
+              <div style={{ flexShrink: 0 }}>
+                {getIcon()}
+              </div>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#111827' }}>
+                  {title}
+                </h3>
+                <p style={{ margin: 0, fontSize: '14px', color: '#4B5563', lineHeight: 1.5 }}>
+                  {message}
+                </p>
+              </div>
+            </div>
 
-        <div style={{
-          padding: '12px 24px',
-          background: '#f9fafb',
-          borderTop: '1px solid #f3f4f6',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: '8px'
-        }}>
-          {type === 'confirm' && (
-            <button
-              style={{
-                padding: '6px 14px',
-                background: '#fff',
-                color: '#4B5563',
-                border: '1px solid #D1D5DB',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: 500
-              }}
-              onClick={onClose}
-            >
-              {cancelText}
-            </button>
-          )}
-          <button
-            style={{
-              padding: '6px 14px',
-              background: getHeaderColor(),
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: 600
-            }}
-            onClick={onConfirm || onClose}
-          >
-            {type === 'confirm' ? confirmText : 'OK'}
-          </button>
-        </div>
+            <div style={{
+              padding: '12px 24px',
+              background: '#f9fafb',
+              borderTop: '1px solid #f3f4f6',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '8px'
+            }}>
+              {type === 'confirm' && (
+                <button
+                  style={{
+                    padding: '6px 14px',
+                    background: '#fff',
+                    color: '#4B5563',
+                    border: '1px solid #D1D5DB',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: 500
+                  }}
+                  onClick={onClose}
+                >
+                  {cancelText}
+                </button>
+              )}
+              <button
+                style={{
+                  padding: '6px 14px',
+                  background: getHeaderColor(),
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 600
+                }}
+                onClick={onConfirm || onClose}
+              >
+                {type === 'confirm' ? confirmText : 'OK'}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

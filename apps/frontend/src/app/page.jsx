@@ -45,6 +45,7 @@ export default function HomePage() {
 
   const dispatch = useDispatch();
   const projectData = useSelector(s => s.project.data);
+  const activeProjectId = useSelector(s => s.project.activeProjectId);
   const platforms = useSelector(s => s.platforms.items);
   const bugs = useSelector(s => s.bugs.items);
   const featureRequests = useSelector(s => s.features.items);
@@ -53,10 +54,12 @@ export default function HomePage() {
   useEffect(() => {
     if (!currentUser && authStatus !== 'loading') {
       router.replace('/login');
-    } else if (currentUser) {
+    } else if (currentUser && !activeProjectId) {
+      router.replace('/projects');
+    } else if (currentUser && activeProjectId) {
       dispatch(fetchProjectData());
     }
-  }, [currentUser, authStatus, router, dispatch]);
+  }, [currentUser, authStatus, activeProjectId, router, dispatch]);
 
   useEffect(() => {
     if (projectData?.id) {
@@ -269,3 +272,4 @@ export default function HomePage() {
     </div>
   );
 }
+// force reload

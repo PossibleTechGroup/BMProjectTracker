@@ -59,6 +59,8 @@ services:
 
 volumes:
   pgdata:
+    name: projecttracker_pgdata
+    external: true
 
 networks:
   tracker-net:

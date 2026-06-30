@@ -6,6 +6,21 @@ export function findAll() {
   });
 }
 
+export function findAllWithCounts() {
+  return prisma.project.findMany({
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      createdAt: true,
+      updatedAt: true,
+      _count: { select: { members: true, platforms: true } },
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+}
+
 export function findById(id) {
   return prisma.project.findUnique({
     where: { id },

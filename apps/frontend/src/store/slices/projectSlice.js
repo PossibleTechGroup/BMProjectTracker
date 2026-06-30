@@ -1,15 +1,21 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { apiFetch } from '@/lib/api';
 
+export const fetchAllProjects = createAsyncThunk(
+  'project/fetchAllProjects',
+  async () => {
+    return await apiFetch('/projects/list');
+  }
+);
+
 export const fetchProjectData = createAsyncThunk(
   'project/fetchProjectData',
-  async () => {
-    const projects = await apiFetch('/projects');
-    if (!projects || projects.length === 0) {
-      throw new Error('No projects found');
+  async (_, { getState }) => {
+    const activeProjectId = getState().project.activeProjectId;
+    if (!activeProjectId) {
+      throw new Error('No active project selected');
     }
-    // Fetch the full project with all relations
-    return await apiFetch(`/projects/${projects[0].id}`);
+    return await apiFetch(`/projects/${activeProjectId}`);
   }
 );
 
@@ -147,12 +153,35 @@ const projectSlice = createSlice({
   name: 'project',
   initialState: {
     data: null,
+    projectsList: [],
+    activeProjectId: typeof window !== 'undefined' ? Number(localStorage.getItem('activeProjectId')) || null : null,
     status: 'idle',
+    listStatus: 'idle',
     error: null,
   },
-  reducers: {},
+  reducers: {
+    setActiveProject(state, action) {
+      state.activeProjectId = action.payload;
+      if (typeof window !== 'undefined' && action.payload) {
+        localStorage.setItem('activeProjectId', action.payload);
+      } else if (typeof window !== 'undefined') {
+        localStorage.removeItem('activeProjectId');
+      }
+    }
+  },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchAllProjects.pending, (state) => {
+        state.listStatus = 'loading';
+      })
+      .addCase(fetchAllProjects.fulfilled, (state, action) => {
+        state.listStatus = 'succeeded';
+        state.projectsList = action.payload;
+      })
+      .addCase(fetchAllProjects.rejected, (state, action) => {
+        state.listStatus = 'failed';
+        state.error = action.error.message;
+      })
       .addCase(fetchProjectData.pending, (state) => {
         state.status = 'loading';
       })
@@ -233,4 +262,5 @@ const projectSlice = createSlice({
   },
 });
 
+export const { setActiveProject } = projectSlice.actions;
 export default projectSlice.reducer;

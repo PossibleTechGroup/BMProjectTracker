@@ -16,7 +16,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (currentUser) {
-      router.push('/');
+      router.push('/projects');
     }
   }, [currentUser, router]);
 

@@ -1,10 +1,20 @@
 import bcrypt from 'bcryptjs';
 import * as userModel from '../models/user.js';
 import { generateToken } from '../middleware/auth.js';
+import prisma from '../lib/prisma.js';
 
 export async function register({ name, username, email, password }) {
   const hash = await bcrypt.hash(password, 10);
   const user = await userModel.create({ name, username, email, password: hash });
+
+  // Auto-add the new user to all existing projects
+  const allProjects = await prisma.project.findMany({ select: { id: true } });
+  for (const p of allProjects) {
+    await prisma.projectMember.create({
+      data: { projectId: p.id, userId: user.id, role: 'MEMBER' },
+    }).catch(() => {}); // ignore if duplicate
+  }
+
   const token = generateToken(user);
   return { token, user: { id: user.id, name: user.name, username: user.username, role: user.role } };
 }

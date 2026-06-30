@@ -8,6 +8,7 @@ const router = Router();
 
 router.use(authenticate);
 
+router.get('/list', projectController.getAllWithCounts);
 router.get('/', projectController.getAll);
 router.get('/:id', projectController.getById);
 router.post('/', projectController.create);

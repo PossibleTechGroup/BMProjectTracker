@@ -5,6 +5,10 @@ export function getAll() {
   return projectModel.findAll();
 }
 
+export function getAllWithCounts() {
+  return projectModel.findAllWithCounts();
+}
+
 export function getById(id) {
   return projectModel.findById(id);
 }

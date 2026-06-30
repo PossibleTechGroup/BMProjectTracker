@@ -214,9 +214,10 @@ function SidebarItem({ item, activeSection, onSelect, depth = 0 }) {
 export default function DocSidebar({ activeSection, onSelect, isWide, onToggleWide }) {
   const currentUser = useSelector(s => s.ui.currentUser);
   const customPlatforms = useSelector(s => s.editData.customPlatforms || []);
+  const projectData = useSelector(s => s.project.data);
   const edits = useSelector(s => s.editData);
-  const sidebarTitle = edits['sidebar.title'] || 'BM Ecosystem';
-  const sidebarSubtitle = edits['sidebar.subtitle'] || 'Full Project Documentation';
+  const sidebarTitle = projectData?.name || edits['sidebar.title'] || 'BM Ecosystem';
+  const sidebarSubtitle = projectData?.description || edits['sidebar.subtitle'] || 'Full Project Documentation';
   const dispatch = useDispatch();
   const router = useRouter();
   const isAdmin = currentUser?.role === 'ADMIN';
@@ -360,9 +361,30 @@ export default function DocSidebar({ activeSection, onSelect, isWide, onToggleWi
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <h2 className="doc-sidebar__title" style={{ margin: 0 }}>{sidebarTitle}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <h2 className="doc-sidebar__title" style={{ margin: 0 }}>{sidebarTitle}</h2>
+                <button
+                  onClick={() => router.push('/projects')}
+                  style={{
+                    background: '#f3eefb',
+                    border: 'none',
+                    color: '#764ABC',
+                    cursor: 'pointer',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                  title="Switch Project"
+                >
+                  Switch
+                </button>
+              </div>
               <span className="doc-sidebar__subtitle">{sidebarSubtitle}</span>
             </div>
             {isAdmin && (
