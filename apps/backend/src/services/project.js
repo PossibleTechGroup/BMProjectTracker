@@ -76,7 +76,7 @@ export async function remove(id, userName) {
       await tx.feature.deleteMany({ where: { platformId: { in: platformIds } } });
       await tx.featureRequest.deleteMany({ where: { platformId: { in: platformIds } } });
 
-      const qaStories = await tx.qaUserStory.findMany({
+      const qaStories = await tx.qAUserStory.findMany({
         where: { platformId: { in: platformIds } },
         select: { id: true },
       });
@@ -85,7 +85,7 @@ export async function remove(id, userName) {
         await tx.qATestStep.deleteMany({ where: { qaUserStoryId: { in: qaIds } } });
       }
 
-      await tx.qaUserStory.deleteMany({ where: { platformId: { in: platformIds } } });
+      await tx.qAUserStory.deleteMany({ where: { platformId: { in: platformIds } } });
 
       const bugs = await tx.bugReport.findMany({
         where: { platformId: { in: platformIds } },
